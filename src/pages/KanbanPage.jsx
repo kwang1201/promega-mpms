@@ -6,11 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Header from '@/components/layout/Header'
 import { useProjects, useUpdateProject } from '@/hooks/useProjects'
 import { useConferences } from '@/hooks/useConferences'
-import { PROJECT_STATUS, PROJECT_STATUS_ORDER, TRACK_TYPES } from '@/lib/constants'
+import { PROJECT_STATUS, PROJECT_STATUS_ORDER, TRACK_TYPES, AGENCY_VISIBLE_STATUSES } from '@/lib/constants'
+import { useAuth } from '@/contexts/AuthContext'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 
 export default function KanbanPage() {
+  const { profile } = useAuth()
   const { data: projects, isLoading } = useProjects()
   const { data: conferences } = useConferences()
   const updateProject = useUpdateProject()
@@ -18,6 +20,11 @@ export default function KanbanPage() {
   const [filterTrack, setFilterTrack] = useState('all')
   const [draggedId, setDraggedId] = useState(null)
   const [dragOverCol, setDragOverCol] = useState(null)
+
+  // Agency can only see certain statuses
+  const visibleStatuses = profile?.role === 'agency'
+    ? PROJECT_STATUS_ORDER.filter(s => AGENCY_VISIBLE_STATUSES.includes(s))
+    : PROJECT_STATUS_ORDER
 
   const filtered = projects?.filter(p => {
     if (filterConference !== 'all' && p.conference_id !== filterConference) return false
@@ -70,7 +77,7 @@ export default function KanbanPage() {
           <p className="text-muted-foreground p-4">Loading...</p>
         ) : (
           <div className="flex gap-3 min-w-max">
-            {PROJECT_STATUS_ORDER.map(statusKey => {
+            {visibleStatuses.map(statusKey => {
               const statusInfo = PROJECT_STATUS[statusKey]
               const columnProjects = filtered.filter(p => p.status === statusKey)
               return (

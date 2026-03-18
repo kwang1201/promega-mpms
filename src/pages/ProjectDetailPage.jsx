@@ -12,11 +12,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import Header from '@/components/layout/Header'
 import ReviewPanel from '@/components/reviews/ReviewPanel'
 import CommentList from '@/components/comments/CommentList'
+import WorkflowProgress from '@/components/workflow/WorkflowProgress'
+import WorkflowActions from '@/components/workflow/WorkflowActions'
+import ActivityLog from '@/components/activity/ActivityLog'
 import { useProject, useUpdateProject } from '@/hooks/useProjects'
 import { useFiles, useUploadFile, getSignedUrl } from '@/hooks/useFiles'
+import { useLogActivity } from '@/hooks/useActivityLog'
 import { useAuth } from '@/contexts/AuthContext'
 import { notifyProjectMembers } from '@/lib/notify'
-import { PROJECT_STATUS, TRACK_TYPES } from '@/lib/constants'
+import { PROJECT_STATUS, TRACK_TYPES, AGENCY_VISIBLE_STATUSES } from '@/lib/constants'
 
 function formatFileSize(bytes) {
   if (!bytes) return '-'
@@ -32,7 +36,63 @@ export default function ProjectDetailPage() {
   const { data: files, isLoading: filesLoading } = useFiles(id)
   const updateProject = useUpdateProject()
   const uploadFile = useUploadFile()
+  const logActivity = useLogActivity()
   const [dragOver, setDragOver] = useState(false)
+
+  const handleWorkflowAction = useCallback(async ({ targetStatus, actionKey, file, fileCategory }) => {
+    if (!project || !user) return
+
+    // Upload file if provided (for quotation/invoice actions)
+    if (file) {
+      await uploadFile.mutateAsync({
+        projectId: project.id,
+        conferenceId: project.conference_id,
+        file,
+        fileCategory,
+      })
+    }
+
+    // Update project status
+    await updateProject.mutateAsync({ id: project.id, status: targetStatus })
+
+    // Log activity
+    await logActivity.mutateAsync({
+      projectId: project.id,
+      userId: user.id,
+      action: actionKey,
+      details: {
+        fromStatus: project.status,
+        toStatus: targetStatus,
+        filename: file?.name,
+      },
+    })
+
+    // Notify project members
+    const actionLabels = {
+      submit_to_ms: 'MS팀에 제출됨',
+      send_to_owner: 'Owner 검토 요청',
+      skip_to_quotation: '견적 요청 진행',
+      return_to_draft: '초안으로 반려됨',
+      approve_to_quotation: '승인, 견적 요청 진행',
+      request_changes: '수정 요청',
+      submit_quotation: '견적서 제출됨',
+      send_for_approval: 'Owner 승인 요청',
+      approve_quotation: '견적 승인됨',
+      reject_quotation: '견적 반려됨',
+      start_production: '제작 시작',
+      submit_invoice: '세금계산서 제출됨',
+      complete_project: '프로젝트 완료',
+    }
+
+    notifyProjectMembers({
+      projectId: project.id,
+      excludeUserId: user.id,
+      eventType: 'status_change',
+      title: `[${project.title}] ${actionLabels[actionKey] || 'Status Updated'}`,
+      message: `${profile?.name}님이 프로젝트 상태를 변경했습니다.`,
+      link: `/projects/${project.id}`,
+    })
+  }, [project, user, profile, updateProject, uploadFile, logActivity])
 
   const handleDrop = useCallback(async (e) => {
     e.preventDefault()
@@ -46,6 +106,13 @@ export default function ProjectDetailPage() {
         file,
       })
     }
+    // Log file upload activity
+    await logActivity.mutateAsync({
+      projectId: project.id,
+      userId: user.id,
+      action: 'file_upload',
+      details: { filename: droppedFiles.map(f => f.name).join(', '), count: droppedFiles.length },
+    })
     notifyProjectMembers({
       projectId: project.id,
       excludeUserId: user.id,
@@ -54,7 +121,7 @@ export default function ProjectDetailPage() {
       message: `${profile?.name} uploaded ${droppedFiles.length} file(s)`,
       link: `/projects/${project.id}`,
     })
-  }, [project, uploadFile, user, profile])
+  }, [project, uploadFile, user, profile, logActivity])
 
   const handleFileSelect = useCallback(async (e) => {
     if (!project) return
@@ -67,6 +134,13 @@ export default function ProjectDetailPage() {
       })
     }
     e.target.value = ''
+    // Log file upload activity
+    await logActivity.mutateAsync({
+      projectId: project.id,
+      userId: user.id,
+      action: 'file_upload',
+      details: { filename: selectedFiles.map(f => f.name).join(', '), count: selectedFiles.length },
+    })
     notifyProjectMembers({
       projectId: project.id,
       excludeUserId: user.id,
@@ -75,7 +149,7 @@ export default function ProjectDetailPage() {
       message: `${profile?.name} uploaded ${selectedFiles.length} file(s)`,
       link: `/projects/${project.id}`,
     })
-  }, [project, uploadFile, user, profile])
+  }, [project, uploadFile, user, profile, logActivity])
 
   async function handleDownload(file) {
     const { data, error } = await getSignedUrl(file.storage_path)
@@ -87,8 +161,22 @@ export default function ProjectDetailPage() {
   if (isLoading) return <div className="p-6 text-muted-foreground">Loading...</div>
   if (!project) return <div className="p-6 text-muted-foreground">Project not found</div>
 
+  // Agency access control: block access before quotation_request
+  if (profile?.role === 'agency' && !AGENCY_VISIBLE_STATUSES.includes(project.status)) {
+    return <div className="p-6 text-muted-foreground">This project is not yet available.</div>
+  }
+
   const status = PROJECT_STATUS[project.status]
   const track = TRACK_TYPES[project.track_type]
+
+  // Detect skipped steps (if owner_review was skipped: went from ms_review to quotation_request)
+  const skippedSteps = []
+  const currentStep = status?.step || 1
+  if (currentStep >= 4) {
+    // If we never went through owner_review, mark it as skipped
+    // Simple heuristic: if status is past owner_review
+    skippedSteps.push('owner_review')
+  }
 
   return (
     <>
@@ -114,7 +202,14 @@ export default function ProjectDetailPage() {
           </Button>
         </Link>
       </Header>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-4">
+        {/* Workflow Progress Bar */}
+        <Card>
+          <CardContent className="pt-4 pb-2">
+            <WorkflowProgress currentStatus={project.status} skippedSteps={skippedSteps} />
+          </CardContent>
+        </Card>
+
         {/* Project Info */}
         <Card>
           <CardContent className="pt-6">
@@ -123,10 +218,12 @@ export default function ProjectDetailPage() {
                 <span className="text-muted-foreground">Track: </span>
                 <span>{track?.icon} {track?.label}</span>
               </div>
-              <div>
-                <span className="text-muted-foreground">Conference: </span>
-                {project.conference?.name}
-              </div>
+              {project.conference?.name && (
+                <div>
+                  <span className="text-muted-foreground">Conference: </span>
+                  {project.conference.name}
+                </div>
+              )}
               <div>
                 <span className="text-muted-foreground">Status: </span>
                 <Badge className={status?.color}>{status?.label}</Badge>
@@ -153,23 +250,42 @@ export default function ProjectDetailPage() {
             {project.description && (
               <p className="mt-3 text-sm text-muted-foreground">{project.description}</p>
             )}
-            <div className="mt-4">
-              <Select
-                value={project.status}
-                onValueChange={(v) => updateProject.mutate({ id: project.id, status: v })}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(PROJECT_STATUS).map(([key, { label }]) => (
-                    <SelectItem key={key} value={key}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Emergency status override for ms_manager only */}
+            {profile?.role === 'ms_manager' && (
+              <div className="mt-4">
+                <Select
+                  value={project.status}
+                  onValueChange={async (v) => {
+                    await updateProject.mutateAsync({ id: project.id, status: v })
+                    await logActivity.mutateAsync({
+                      projectId: project.id,
+                      userId: user.id,
+                      action: 'status_change',
+                      details: { fromStatus: project.status, toStatus: v, note: 'Manual override' },
+                    })
+                  }}
+                >
+                  <SelectTrigger className="w-56">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(PROJECT_STATUS).map(([key, { label }]) => (
+                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">MS Manager: 긴급 상태 변경</p>
+              </div>
+            )}
           </CardContent>
         </Card>
+
+        {/* Workflow Action Buttons */}
+        <WorkflowActions
+          project={project}
+          profile={profile}
+          onAction={handleWorkflowAction}
+        />
 
         {/* Tabs: Files / Reviews / Comments */}
         <Tabs defaultValue="files">
@@ -225,6 +341,7 @@ export default function ProjectDetailPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>File Name</TableHead>
+                        <TableHead>Category</TableHead>
                         <TableHead>Version</TableHead>
                         <TableHead>Size</TableHead>
                         <TableHead>Uploader</TableHead>
@@ -240,6 +357,11 @@ export default function ProjectDetailPage() {
                               <FileIcon className="h-4 w-4 text-muted-foreground" />
                               {file.original_name}
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {file.file_category || 'general'}
+                            </Badge>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">v{file.version}</Badge>
@@ -285,6 +407,13 @@ export default function ProjectDetailPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Activity Log - Always visible at bottom */}
+        <Card>
+          <CardContent className="pt-6">
+            <ActivityLog projectId={id} />
+          </CardContent>
+        </Card>
       </div>
     </>
   )

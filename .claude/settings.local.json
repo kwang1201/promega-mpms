@@ -9,7 +9,17 @@
       "Bash(rm -rf temp-init)",
       "Bash(npx vite:*)",
       "Bash(npx shadcn@latest init -d --defaults)",
-      "Bash(npx shadcn@latest init -d)"
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest add card input label dialog select badge tabs avatar dropdown-menu separator sheet textarea table -y)",
+      "Bash(npx shadcn@latest add card input label dialog select badge tabs avatar dropdown-menu separator sheet textarea table --overwrite)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "mcp__Claude_in_Chrome__navigate",
+      "mcp__Claude_in_Chrome__tabs_create_mcp",
+      "Bash(python3 -c \":*)",
+      "Bash(npx shadcn@latest add skeleton sonner breadcrumb tooltip alert-dialog --overwrite)",
+      "Bash(npm run:*)",
+      "Bash(find '/c/Marketing process management system/src' -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx \\\\\\))",
+      "Bash(xargs grep:*)"
     ]
   }
 }

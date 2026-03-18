@@ -7,14 +7,16 @@ import { ko } from 'date-fns/locale'
 import Header from '@/components/layout/Header'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProjects } from '@/hooks/useProjects'
-import { PROJECT_STATUS, TRACK_TYPES } from '@/lib/constants'
+import { PROJECT_STATUS, TRACK_TYPES, AGENCY_VISIBLE_STATUSES } from '@/lib/constants'
 
 export default function AgencyDashboard() {
   const { profile } = useAuth()
   const { data: allProjects, isLoading } = useProjects()
 
-  // Agency sees only projects assigned to their agency
-  const projects = allProjects?.filter(p => p.agency_id === profile?.agency_id) || []
+  // Agency sees only projects assigned to their agency AND visible statuses
+  const projects = allProjects?.filter(p =>
+    p.agency_id === profile?.agency_id && AGENCY_VISIBLE_STATUSES.includes(p.status)
+  ) || []
   const inProgress = projects.filter(p => !['completed'].includes(p.status))
   const completed = projects.filter(p => p.status === 'completed')
 
