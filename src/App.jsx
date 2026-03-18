@@ -11,6 +11,8 @@ import ProjectDetailPage from '@/pages/ProjectDetailPage'
 import KanbanPage from '@/pages/KanbanPage'
 import CostManagementPage from '@/pages/CostManagementPage'
 import RequestsPage from '@/pages/RequestsPage'
+import GanttPage from '@/pages/GanttPage'
+import BrandAssetsPage from '@/pages/BrandAssetsPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,7 +43,9 @@ function App() {
               <Route path="/projects/:id" element={<ProjectDetailPage />} />
               <Route path="/requests" element={<RequestsPage />} />
               <Route path="/kanban" element={<KanbanPage />} />
+              <Route path="/gantt" element={<GanttPage />} />
               <Route path="/costs" element={<CostManagementPage />} />
+              <Route path="/brand-assets" element={<BrandAssetsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

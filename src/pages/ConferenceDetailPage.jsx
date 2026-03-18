@@ -11,6 +11,7 @@ import Header from '@/components/layout/Header'
 import ProjectForm from '@/components/projects/ProjectForm'
 import ConferenceForm from '@/components/conferences/ConferenceForm'
 import CostSummary from '@/components/costs/CostSummary'
+import TrackTimeline from '@/components/timeline/TrackTimeline'
 import { useConference, useUpdateConference } from '@/hooks/useConferences'
 import { useProjects, useCreateProject, useUpdateProject } from '@/hooks/useProjects'
 import { useCosts } from '@/hooks/useCosts'
@@ -110,6 +111,13 @@ export default function ConferenceDetailPage() {
 
         {/* Cost Summary */}
         <CostSummary budget={Number(conference.budget || 0)} costs={costs} />
+
+        {/* Track Timeline */}
+        <TrackTimeline
+          projects={projects || []}
+          conferenceStart={conference.date_start}
+          conferenceEnd={conference.date_end}
+        />
 
         {/* Track Progress */}
         <div className="flex items-center justify-between">
