@@ -13,6 +13,8 @@ import CostManagementPage from '@/pages/CostManagementPage'
 import RequestsPage from '@/pages/RequestsPage'
 import GanttPage from '@/pages/GanttPage'
 import BrandAssetsPage from '@/pages/BrandAssetsPage'
+import UserManagementPage from '@/pages/UserManagementPage'
+import AgencyManagementPage from '@/pages/AgencyManagementPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +48,8 @@ function App() {
               <Route path="/gantt" element={<GanttPage />} />
               <Route path="/costs" element={<CostManagementPage />} />
               <Route path="/brand-assets" element={<BrandAssetsPage />} />
+              <Route path="/users" element={<UserManagementPage />} />
+              <Route path="/agencies" element={<AgencyManagementPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

@@ -1,28 +1,29 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Building2, Columns3, CircleDollarSign, FileText, GanttChart, Palette, LogOut } from 'lucide-react'
+import { LayoutDashboard, Building2, Columns3, CircleDollarSign, FileText, GanttChart, Palette, Shield, Building, LogOut } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { ROLES } from '@/lib/constants'
+import { can } from '@/lib/permissions'
 
-const INTERNAL_NAV = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/conferences', icon: Building2, label: 'Conferences' },
-  { to: '/requests', icon: FileText, label: 'Requests' },
-  { to: '/kanban', icon: Columns3, label: 'KANBAN Board' },
-  { to: '/gantt', icon: GanttChart, label: 'Gantt Chart' },
-  { to: '/costs', icon: CircleDollarSign, label: 'Cost Management' },
-  { to: '/brand-assets', icon: Palette, label: 'Brand Assets' },
-]
-
-const AGENCY_NAV = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/kanban', icon: Columns3, label: 'KANBAN Board' },
+const NAV_ITEMS = [
+  { to: '/', icon: LayoutDashboard, label: 'Dashboard', permission: null },
+  { to: '/conferences', icon: Building2, label: 'Conferences', permission: 'page.conferences' },
+  { to: '/requests', icon: FileText, label: 'Requests', permission: 'page.requests' },
+  { to: '/kanban', icon: Columns3, label: 'KANBAN Board', permission: 'page.kanban' },
+  { to: '/gantt', icon: GanttChart, label: 'Gantt Chart', permission: 'page.gantt' },
+  { to: '/costs', icon: CircleDollarSign, label: 'Cost Management', permission: 'page.costs' },
+  { to: '/brand-assets', icon: Palette, label: 'Brand Assets', permission: 'page.brand_assets' },
+  { to: '/agencies', icon: Building, label: 'Agencies', permission: 'page.agencies' },
+  { to: '/users', icon: Shield, label: 'Users', permission: 'page.users' },
 ]
 
 export default function Sidebar({ onNavigate }) {
   const { profile, signOut } = useAuth()
   const isAgency = profile?.role === 'agency'
-  const navItems = isAgency ? AGENCY_NAV : INTERNAL_NAV
+
+  const visibleItems = NAV_ITEMS.filter(item =>
+    item.permission === null || can(profile, item.permission)
+  )
 
   return (
     <aside className="w-64 bg-[#13294B] text-white flex flex-col h-screen sticky top-0">
@@ -40,8 +41,8 @@ export default function Sidebar({ onNavigate }) {
 
       <div className="h-px bg-white/10 mx-4" />
 
-      <nav className="flex-1 p-3 space-y-1 mt-1">
-        {navItems.map(item => (
+      <nav className="flex-1 p-3 space-y-1 mt-1 overflow-y-auto">
+        {visibleItems.map(item => (
           <NavLink
             key={item.to}
             to={item.to}
