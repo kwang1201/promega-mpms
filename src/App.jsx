@@ -1,44 +1,42 @@
-import { useEffect, useState } from 'react'
-import { supabase } from './lib/supabase'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { AuthProvider } from '@/contexts/AuthContext'
+import AppLayout from '@/components/layout/AppLayout'
+import LoginPage from '@/pages/LoginPage'
+import DashboardPage from '@/pages/DashboardPage'
+import ConferencesPage from '@/pages/ConferencesPage'
+import ConferenceDetailPage from '@/pages/ConferenceDetailPage'
+import ProjectDetailPage from '@/pages/ProjectDetailPage'
+import KanbanPage from '@/pages/KanbanPage'
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60,
+      retry: 1,
+    },
+  },
+})
 
 function App() {
-  const [status, setStatus] = useState('연결 확인 중...')
-
-  useEffect(() => {
-    async function checkConnection() {
-      try {
-        const { error } = await supabase.from('_dummy_check').select('*').limit(1)
-        // 테이블이 없어도 연결 자체는 성공 (42P01 = relation does not exist)
-        if (error && error.code !== '42P01' && error.code !== 'PGRST116') {
-          setStatus(`연결 오류: ${error.message}`)
-        } else {
-          setStatus('Supabase 연결 성공!')
-        }
-      } catch (err) {
-        setStatus(`연결 실패: ${err.message}`)
-      }
-    }
-    checkConnection()
-  }, [])
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center p-8 bg-white rounded-xl shadow-lg max-w-md">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">
-          마케팅 프로세스 관리 시스템
-        </h1>
-        <div className={`text-lg font-medium ${
-          status.includes('성공') ? 'text-green-600' :
-          status.includes('오류') || status.includes('실패') ? 'text-red-600' :
-          'text-yellow-600'
-        }`}>
-          {status}
-        </div>
-        <p className="mt-4 text-sm text-gray-500">
-          Supabase URL: {import.meta.env.VITE_SUPABASE_URL}
-        </p>
-      </div>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/conferences" element={<ConferencesPage />} />
+              <Route path="/conferences/:id" element={<ConferenceDetailPage />} />
+              <Route path="/projects/:id" element={<ProjectDetailPage />} />
+              <Route path="/kanban" element={<KanbanPage />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </QueryClientProvider>
   )
 }
 

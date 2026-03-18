@@ -1,0 +1,221 @@
+import { useState, useCallback } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { ArrowLeft, Upload, Download, FileIcon } from 'lucide-react'
+import { format } from 'date-fns'
+import { ko } from 'date-fns/locale'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import Header from '@/components/layout/Header'
+import { useProject, useUpdateProject } from '@/hooks/useProjects'
+import { useFiles, useUploadFile, getSignedUrl } from '@/hooks/useFiles'
+import { PROJECT_STATUS, TRACK_TYPES } from '@/lib/constants'
+
+function formatFileSize(bytes) {
+  if (!bytes) return '-'
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+export default function ProjectDetailPage() {
+  const { id } = useParams()
+  const { data: project, isLoading } = useProject(id)
+  const { data: files, isLoading: filesLoading } = useFiles(id)
+  const updateProject = useUpdateProject()
+  const uploadFile = useUploadFile()
+  const [dragOver, setDragOver] = useState(false)
+
+  const handleDrop = useCallback(async (e) => {
+    e.preventDefault()
+    setDragOver(false)
+    if (!project) return
+    const droppedFiles = Array.from(e.dataTransfer.files)
+    for (const file of droppedFiles) {
+      await uploadFile.mutateAsync({
+        projectId: project.id,
+        conferenceId: project.conference_id,
+        file,
+      })
+    }
+  }, [project, uploadFile])
+
+  const handleFileSelect = useCallback(async (e) => {
+    if (!project) return
+    const selectedFiles = Array.from(e.target.files)
+    for (const file of selectedFiles) {
+      await uploadFile.mutateAsync({
+        projectId: project.id,
+        conferenceId: project.conference_id,
+        file,
+      })
+    }
+    e.target.value = ''
+  }, [project, uploadFile])
+
+  async function handleDownload(file) {
+    const { data, error } = await getSignedUrl(file.storage_path)
+    if (!error && data?.signedUrl) {
+      window.open(data.signedUrl, '_blank')
+    }
+  }
+
+  if (isLoading) return <div className="p-6 text-muted-foreground">로딩 중...</div>
+  if (!project) return <div className="p-6 text-muted-foreground">프로젝트를 찾을 수 없습니다</div>
+
+  const status = PROJECT_STATUS[project.status]
+  const track = TRACK_TYPES[project.track_type]
+
+  return (
+    <>
+      <Header title={project.title}>
+        <Link to={`/conferences/${project.conference_id}`}>
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            학회로 돌아가기
+          </Button>
+        </Link>
+      </Header>
+      <div className="p-6 space-y-6">
+        {/* Project Info */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-wrap gap-6 text-sm">
+              <div>
+                <span className="text-muted-foreground">트랙: </span>
+                <span>{track?.icon} {track?.label}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">학회: </span>
+                {project.conference?.name}
+              </div>
+              <div>
+                <span className="text-muted-foreground">상태: </span>
+                <Badge className={status?.color}>{status?.label}</Badge>
+              </div>
+              {project.deadline && (
+                <div>
+                  <span className="text-muted-foreground">마감: </span>
+                  {format(new Date(project.deadline), 'yyyy.MM.dd', { locale: ko })}
+                </div>
+              )}
+              {project.assignee && (
+                <div>
+                  <span className="text-muted-foreground">담당자: </span>
+                  {project.assignee.name}
+                </div>
+              )}
+              {project.agency && (
+                <div>
+                  <span className="text-muted-foreground">외주업체: </span>
+                  {project.agency.name}
+                </div>
+              )}
+            </div>
+            {project.description && (
+              <p className="mt-3 text-sm text-muted-foreground">{project.description}</p>
+            )}
+            <div className="mt-4">
+              <Select
+                value={project.status}
+                onValueChange={(v) => updateProject.mutate({ id: project.id, status: v })}
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(PROJECT_STATUS).map(([key, { label }]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* File Upload */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">파일 관리</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Drop zone */}
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                dragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
+              }`}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+            >
+              <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground mb-2">
+                파일을 여기에 드래그하거나
+              </p>
+              <label>
+                <input type="file" multiple className="hidden" onChange={handleFileSelect} />
+                <Button variant="outline" size="sm" asChild>
+                  <span>파일 선택</span>
+                </Button>
+              </label>
+              {uploadFile.isPending && (
+                <p className="text-sm text-primary mt-2">업로드 중...</p>
+              )}
+            </div>
+
+            {/* File list */}
+            {filesLoading ? (
+              <p className="text-sm text-muted-foreground">파일 로딩 중...</p>
+            ) : files?.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">업로드된 파일이 없습니다</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>파일명</TableHead>
+                    <TableHead>버전</TableHead>
+                    <TableHead>크기</TableHead>
+                    <TableHead>업로더</TableHead>
+                    <TableHead>업로드일</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {files?.map(file => (
+                    <TableRow key={file.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <FileIcon className="h-4 w-4 text-muted-foreground" />
+                          {file.original_name}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">v{file.version}</Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatFileSize(file.file_size)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {file.uploader?.name || '-'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {format(new Date(file.created_at), 'MM.dd HH:mm', { locale: ko })}
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => handleDownload(file)}>
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  )
+}
