@@ -1,27 +1,35 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Building2, Columns3, LogOut } from 'lucide-react'
+import { LayoutDashboard, Building2, Columns3, FolderKanban, LogOut } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { ROLES } from '@/lib/constants'
 
-const NAV_ITEMS = [
+const INTERNAL_NAV = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/conferences', icon: Building2, label: 'Conferences' },
   { to: '/kanban', icon: Columns3, label: 'KANBAN Board' },
 ]
 
+const AGENCY_NAV = [
+  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/kanban', icon: Columns3, label: 'KANBAN Board' },
+]
+
 export default function Sidebar() {
   const { profile, signOut } = useAuth()
+  const isAgency = profile?.role === 'agency'
+  const navItems = isAgency ? AGENCY_NAV : INTERNAL_NAV
 
   return (
     <aside className="w-64 bg-[#13294B] text-white flex flex-col h-screen sticky top-0">
-      {/* Logo area with Sol accent */}
       <div className="p-5">
         <div className="flex items-center gap-2">
           <div className="w-2 h-8 bg-[#FDB813] rounded-sm" />
           <div>
             <h1 className="text-base font-bold tracking-tight">MKT Process</h1>
-            <p className="text-[11px] text-white/50">Marketing Process Management</p>
+            <p className="text-[11px] text-white/50">
+              {isAgency ? 'Agency Portal' : 'Marketing Process Management'}
+            </p>
           </div>
         </div>
       </div>
@@ -29,7 +37,7 @@ export default function Sidebar() {
       <div className="h-px bg-white/10 mx-4" />
 
       <nav className="flex-1 p-3 space-y-1 mt-1">
-        {NAV_ITEMS.map(item => (
+        {navItems.map(item => (
           <NavLink
             key={item.to}
             to={item.to}

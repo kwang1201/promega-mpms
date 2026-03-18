@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider } from '@/contexts/AuthContext'
+import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import AppLayout from '@/components/layout/AppLayout'
 import LoginPage from '@/pages/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
+import AgencyDashboard from '@/pages/AgencyDashboard'
 import ConferencesPage from '@/pages/ConferencesPage'
 import ConferenceDetailPage from '@/pages/ConferenceDetailPage'
 import ProjectDetailPage from '@/pages/ProjectDetailPage'
@@ -18,6 +19,12 @@ const queryClient = new QueryClient({
   },
 })
 
+function DashboardRouter() {
+  const { profile } = useAuth()
+  if (profile?.role === 'agency') return <AgencyDashboard />
+  return <DashboardPage />
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -26,7 +33,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route element={<AppLayout />}>
-              <Route path="/" element={<DashboardPage />} />
+              <Route path="/" element={<DashboardRouter />} />
               <Route path="/conferences" element={<ConferencesPage />} />
               <Route path="/conferences/:id" element={<ConferenceDetailPage />} />
               <Route path="/projects/:id" element={<ProjectDetailPage />} />

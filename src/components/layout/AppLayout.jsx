@@ -8,7 +8,7 @@ export default function AppLayout() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">로딩 중...</p>
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     )
   }
