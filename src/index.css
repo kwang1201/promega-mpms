@@ -1,81 +1,69 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/roboto-flex";
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.809 0.105 251.813);
-    --chart-2: oklch(0.623 0.214 259.815);
-    --chart-3: oklch(0.546 0.245 262.881);
-    --chart-4: oklch(0.488 0.243 264.376);
-    --chart-5: oklch(0.424 0.199 265.638);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
-}
+/* =============================================
+   Promega Brand Colors (System Element Guidelines)
+   - Promega Sol: #FDB813
+   - Deep Galaxy: #13294B
+   - Still Water: #455DA0
+   - Clear Skies: #199AC2
+   - Spirit Purple: #713A61
+   - Neutrals: #333333, #515151, #EBE7E3, #F1F1F1
+   ============================================= */
 
-.dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.809 0.105 251.813);
-    --chart-2: oklch(0.623 0.214 259.815);
-    --chart-3: oklch(0.546 0.245 262.881);
-    --chart-4: oklch(0.488 0.243 264.376);
-    --chart-5: oklch(0.424 0.199 265.638);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+:root {
+    --background: #FFFFFF;
+    --foreground: #333333;
+    --card: #FFFFFF;
+    --card-foreground: #333333;
+    --popover: #FFFFFF;
+    --popover-foreground: #333333;
+    --primary: #13294B;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F1F1F1;
+    --secondary-foreground: #13294B;
+    --muted: #F1F1F1;
+    --muted-foreground: #515151;
+    --accent: #EBE7E3;
+    --accent-foreground: #13294B;
+    --destructive: #DC2626;
+    --border: #EBE7E3;
+    --input: #EBE7E3;
+    --ring: #455DA0;
+
+    /* Promega brand tokens */
+    --promega-sol: #FDB813;
+    --promega-deep-galaxy: #13294B;
+    --promega-still-water: #455DA0;
+    --promega-clear-skies: #199AC2;
+    --promega-spirit-purple: #713A61;
+
+    /* Charts use brand colors */
+    --chart-1: #FDB813;
+    --chart-2: #199AC2;
+    --chart-3: #455DA0;
+    --chart-4: #713A61;
+    --chart-5: #13294B;
+
+    --radius: 0.5rem;
+
+    /* Sidebar: Deep Galaxy theme */
+    --sidebar: #13294B;
+    --sidebar-foreground: #FFFFFF;
+    --sidebar-primary: #FDB813;
+    --sidebar-primary-foreground: #13294B;
+    --sidebar-accent: #1e3a5f;
+    --sidebar-accent-foreground: #FFFFFF;
+    --sidebar-border: #1e3a5f;
+    --sidebar-ring: #455DA0;
 }
 
 @theme inline {
-    --font-sans: 'Geist Variable', sans-serif;
+    --font-sans: 'Roboto Flex Variable', 'Roboto', 'Arial', sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -107,6 +95,14 @@
     --color-card: var(--card);
     --color-foreground: var(--foreground);
     --color-background: var(--background);
+
+    /* Promega brand color utilities */
+    --color-promega-sol: var(--promega-sol);
+    --color-promega-deep-galaxy: var(--promega-deep-galaxy);
+    --color-promega-still-water: var(--promega-still-water);
+    --color-promega-clear-skies: var(--promega-clear-skies);
+    --color-promega-spirit-purple: var(--promega-spirit-purple);
+
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
@@ -119,11 +115,11 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+  }
   body {
     @apply bg-background text-foreground;
-    }
+  }
   html {
     @apply font-sans;
-    }
+  }
 }

@@ -2,35 +2,43 @@ import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, Building2, Columns3, LogOut } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
+import { ROLES } from '@/lib/constants'
 
 const NAV_ITEMS = [
-  { to: '/', icon: LayoutDashboard, label: '대시보드' },
-  { to: '/conferences', icon: Building2, label: '학회 관리' },
-  { to: '/kanban', icon: Columns3, label: '칸반 보드' },
+  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/conferences', icon: Building2, label: 'Conferences' },
+  { to: '/kanban', icon: Columns3, label: 'KANBAN Board' },
 ]
 
 export default function Sidebar() {
   const { profile, signOut } = useAuth()
 
   return (
-    <aside className="w-64 border-r bg-sidebar text-sidebar-foreground flex flex-col h-screen sticky top-0">
-      <div className="p-4">
-        <h1 className="text-lg font-bold">MKT Process</h1>
-        <p className="text-xs text-muted-foreground">마케팅 프로세스 관리</p>
+    <aside className="w-64 bg-[#13294B] text-white flex flex-col h-screen sticky top-0">
+      {/* Logo area with Sol accent */}
+      <div className="p-5">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-8 bg-[#FDB813] rounded-sm" />
+          <div>
+            <h1 className="text-base font-bold tracking-tight">MKT Process</h1>
+            <p className="text-[11px] text-white/50">Marketing Process Management</p>
+          </div>
+        </div>
       </div>
-      <Separator />
-      <nav className="flex-1 p-3 space-y-1">
+
+      <div className="h-px bg-white/10 mx-4" />
+
+      <nav className="flex-1 p-3 space-y-1 mt-1">
         {NAV_ITEMS.map(item => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.to === '/'}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+              `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
                 isActive
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                  : 'hover:bg-sidebar-accent/50'
+                  ? 'bg-[#FDB813] text-[#13294B] font-medium'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
               }`
             }
           >
@@ -39,26 +47,29 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
-      <Separator />
+
+      <div className="h-px bg-white/10 mx-4" />
+
       <div className="p-3">
         <div className="flex items-center gap-3 px-3 py-2 mb-2">
-          <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
+          <div className="h-8 w-8 rounded-full bg-[#FDB813] text-[#13294B] flex items-center justify-center text-sm font-bold">
             {profile?.name?.[0] || '?'}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{profile?.name}</p>
-            <p className="text-xs text-muted-foreground truncate">
-              {profile?.role === 'owner' && '학회 오너'}
-              {profile?.role === 'ms_staff' && 'MS 담당자'}
-              {profile?.role === 'ms_manager' && 'MS 관리자'}
-              {profile?.role === 'agency' && '외주업체'}
-              {profile?.role === 'scm' && 'SCM'}
+            <p className="text-[11px] text-white/50 truncate">
+              {ROLES[profile?.role] || profile?.role}
             </p>
           </div>
         </div>
-        <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={signOut}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-white/60 hover:text-white hover:bg-white/10"
+          onClick={signOut}
+        >
           <LogOut className="h-4 w-4" />
-          로그아웃
+          Logout
         </Button>
       </div>
     </aside>

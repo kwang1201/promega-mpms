@@ -44,7 +44,7 @@ export default function ConferenceCard({ conference }) {
           {conference.budget > 0 && (
             <div className="flex items-center gap-2">
               <Wallet className="h-3.5 w-3.5" />
-              <span>{Number(conference.budget).toLocaleString()}원</span>
+              <span>₩{Number(conference.budget).toLocaleString()}</span>
             </div>
           )}
         </CardContent>

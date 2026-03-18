@@ -33,10 +33,10 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Header title={`안녕하세요, ${profile?.name || '사용자'}님`} />
+      <Header title={`Welcome, ${profile?.name || 'User'}`} />
       <div className="p-6 space-y-6">
         {isLoading ? (
-          <p className="text-muted-foreground">로딩 중...</p>
+          <p className="text-muted-foreground">Loading...</p>
         ) : (
           <>
             {/* Summary Cards */}
@@ -44,12 +44,12 @@ export default function DashboardPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-blue-100">
-                      <Building2 className="h-5 w-5 text-blue-600" />
+                    <div className="p-2 rounded-lg bg-[#199AC2]/10">
+                      <Building2 className="h-5 w-5 text-[#199AC2]" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{activeConferences.length}</p>
-                      <p className="text-sm text-muted-foreground">진행 중 학회</p>
+                      <p className="text-sm text-muted-foreground">Active Conferences</p>
                     </div>
                   </div>
                 </CardContent>
@@ -57,12 +57,12 @@ export default function DashboardPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-yellow-100">
-                      <FolderKanban className="h-5 w-5 text-yellow-600" />
+                    <div className="p-2 rounded-lg bg-[#FDB813]/15">
+                      <FolderKanban className="h-5 w-5 text-[#946d00]" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{inProgressProjects}</p>
-                      <p className="text-sm text-muted-foreground">진행 중 프로젝트</p>
+                      <p className="text-sm text-muted-foreground">In Progress</p>
                     </div>
                   </div>
                 </CardContent>
@@ -70,12 +70,12 @@ export default function DashboardPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-green-100">
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <div className="p-2 rounded-lg bg-[#13294B]/10">
+                      <CheckCircle2 className="h-5 w-5 text-[#13294B]" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{completedProjects}</p>
-                      <p className="text-sm text-muted-foreground">완료 프로젝트</p>
+                      <p className="text-sm text-muted-foreground">Completed</p>
                     </div>
                   </div>
                 </CardContent>
@@ -83,12 +83,12 @@ export default function DashboardPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-red-100">
+                    <div className="p-2 rounded-lg bg-red-50">
                       <AlertTriangle className="h-5 w-5 text-red-600" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{overdueProjects.length}</p>
-                      <p className="text-sm text-muted-foreground">지연 프로젝트</p>
+                      <p className="text-sm text-muted-foreground">Overdue</p>
                     </div>
                   </div>
                 </CardContent>
@@ -101,25 +101,25 @@ export default function DashboardPage() {
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-orange-500" />
-                    주의 필요
+                    Attention Required
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {overdueProjects.map(p => (
                     <Link key={p.id} to={`/projects/${p.id}`} className="flex items-center gap-3 p-2 rounded hover:bg-accent/50">
-                      <Badge variant="destructive" className="text-xs">지연</Badge>
+                      <Badge variant="destructive" className="text-xs">Overdue</Badge>
                       <span className="text-sm">{p.title}</span>
                       <span className="text-xs text-muted-foreground ml-auto">
-                        마감: {format(new Date(p.deadline), 'MM.dd', { locale: ko })}
+                        Due: {format(new Date(p.deadline), 'MM.dd', { locale: ko })}
                       </span>
                     </Link>
                   ))}
                   {upcomingProjects.map(p => (
                     <Link key={p.id} to={`/projects/${p.id}`} className="flex items-center gap-3 p-2 rounded hover:bg-accent/50">
-                      <Badge className="bg-orange-100 text-orange-700 text-xs">임박</Badge>
+                      <Badge className="bg-[#FDB813]/20 text-[#946d00] text-xs">Due Soon</Badge>
                       <span className="text-sm">{p.title}</span>
                       <span className="text-xs text-muted-foreground ml-auto">
-                        마감: {format(new Date(p.deadline), 'MM.dd', { locale: ko })}
+                        Due: {format(new Date(p.deadline), 'MM.dd', { locale: ko })}
                       </span>
                     </Link>
                   ))}
@@ -130,11 +130,11 @@ export default function DashboardPage() {
             {/* Active Conferences */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">진행 중 학회</CardTitle>
+                <CardTitle className="text-base">Active Conferences</CardTitle>
               </CardHeader>
               <CardContent>
                 {activeConferences.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">진행 중인 학회가 없습니다</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">No active conferences</p>
                 ) : (
                   <div className="space-y-3">
                     {activeConferences.map(conf => {
@@ -159,9 +159,9 @@ export default function DashboardPage() {
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm font-medium">{confProjects.length}개 트랙</p>
+                            <p className="text-sm font-medium">{confProjects.length} Tracks</p>
                             <p className="text-xs text-muted-foreground">
-                              {confProjects.filter(p => p.status === 'completed').length} 완료
+                              {confProjects.filter(p => p.status === 'completed').length} Completed
                             </p>
                           </div>
                         </Link>

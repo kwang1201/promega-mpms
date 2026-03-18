@@ -24,8 +24,8 @@ export default function ConferenceDetailPage() {
   const [showProjectForm, setShowProjectForm] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
 
-  if (confLoading) return <div className="p-6 text-muted-foreground">로딩 중...</div>
-  if (!conference) return <div className="p-6 text-muted-foreground">학회를 찾을 수 없습니다</div>
+  if (confLoading) return <div className="p-6 text-muted-foreground">Loading...</div>
+  if (!conference) return <div className="p-6 text-muted-foreground">Conference not found</div>
 
   const status = CONFERENCE_STATUS[conference.status]
 
@@ -42,12 +42,12 @@ export default function ConferenceDetailPage() {
         <Link to="/conferences">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-1" />
-            목록
+            List
           </Button>
         </Link>
         <Button variant="outline" size="sm" onClick={() => setShowEditForm(true)}>
           <Pencil className="h-4 w-4 mr-1" />
-          수정
+          Edit
         </Button>
       </Header>
       <div className="p-6 space-y-6">
@@ -56,31 +56,31 @@ export default function ConferenceDetailPage() {
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-6 text-sm">
               <div>
-                <span className="text-muted-foreground">상태: </span>
+                <span className="text-muted-foreground">Status: </span>
                 <Badge className={status?.color}>{status?.label}</Badge>
               </div>
               <div>
-                <span className="text-muted-foreground">일정: </span>
+                <span className="text-muted-foreground">Date: </span>
                 {format(new Date(conference.date_start), 'yyyy.MM.dd', { locale: ko })}
                 {' - '}
                 {format(new Date(conference.date_end), 'MM.dd', { locale: ko })}
               </div>
               {conference.location && (
                 <div>
-                  <span className="text-muted-foreground">장소: </span>
+                  <span className="text-muted-foreground">Location: </span>
                   {conference.location}
                 </div>
               )}
               {conference.owner && (
                 <div>
-                  <span className="text-muted-foreground">오너: </span>
+                  <span className="text-muted-foreground">Owner: </span>
                   {conference.owner.name}
                 </div>
               )}
               {conference.budget > 0 && (
                 <div>
-                  <span className="text-muted-foreground">예산: </span>
-                  {Number(conference.budget).toLocaleString()}원
+                  <span className="text-muted-foreground">Budget: </span>
+                  ₩{Number(conference.budget).toLocaleString()}
                 </div>
               )}
             </div>
@@ -107,15 +107,15 @@ export default function ConferenceDetailPage() {
 
         {/* Track Progress */}
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">병렬 트랙</h3>
-          <Button size="sm" onClick={() => setShowProjectForm(true)}>
+          <h3 className="text-lg font-semibold">Parallel Tracks</h3>
+          <Button size="sm" className="bg-[#13294B] hover:bg-[#13294B]/90" onClick={() => setShowProjectForm(true)}>
             <Plus className="h-4 w-4 mr-1" />
-            프로젝트 추가
+            Add Project
           </Button>
         </div>
 
         {projLoading ? (
-          <p className="text-muted-foreground">로딩 중...</p>
+          <p className="text-muted-foreground">Loading...</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {trackGroups.map(group => (
@@ -129,7 +129,7 @@ export default function ConferenceDetailPage() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {group.projects.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">프로젝트 없음</p>
+                    <p className="text-xs text-muted-foreground">No projects</p>
                   ) : (
                     group.projects.map(project => {
                       const pStatus = PROJECT_STATUS[project.status]
@@ -147,7 +147,7 @@ export default function ConferenceDetailPage() {
                           </div>
                           {project.deadline && (
                             <p className="text-xs text-muted-foreground mt-1">
-                              마감: {format(new Date(project.deadline), 'MM.dd', { locale: ko })}
+                              Due: {format(new Date(project.deadline), 'MM.dd', { locale: ko })}
                             </p>
                           )}
                         </Link>

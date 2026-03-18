@@ -62,8 +62,8 @@ export default function ProjectDetailPage() {
     }
   }
 
-  if (isLoading) return <div className="p-6 text-muted-foreground">로딩 중...</div>
-  if (!project) return <div className="p-6 text-muted-foreground">프로젝트를 찾을 수 없습니다</div>
+  if (isLoading) return <div className="p-6 text-muted-foreground">Loading...</div>
+  if (!project) return <div className="p-6 text-muted-foreground">Project not found</div>
 
   const status = PROJECT_STATUS[project.status]
   const track = TRACK_TYPES[project.track_type]
@@ -74,7 +74,7 @@ export default function ProjectDetailPage() {
         <Link to={`/conferences/${project.conference_id}`}>
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-1" />
-            학회로 돌아가기
+            Back to Conference
           </Button>
         </Link>
       </Header>
@@ -84,32 +84,32 @@ export default function ProjectDetailPage() {
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-6 text-sm">
               <div>
-                <span className="text-muted-foreground">트랙: </span>
+                <span className="text-muted-foreground">Track: </span>
                 <span>{track?.icon} {track?.label}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">학회: </span>
+                <span className="text-muted-foreground">Conference: </span>
                 {project.conference?.name}
               </div>
               <div>
-                <span className="text-muted-foreground">상태: </span>
+                <span className="text-muted-foreground">Status: </span>
                 <Badge className={status?.color}>{status?.label}</Badge>
               </div>
               {project.deadline && (
                 <div>
-                  <span className="text-muted-foreground">마감: </span>
+                  <span className="text-muted-foreground">Deadline: </span>
                   {format(new Date(project.deadline), 'yyyy.MM.dd', { locale: ko })}
                 </div>
               )}
               {project.assignee && (
                 <div>
-                  <span className="text-muted-foreground">담당자: </span>
+                  <span className="text-muted-foreground">Assignee: </span>
                   {project.assignee.name}
                 </div>
               )}
               {project.agency && (
                 <div>
-                  <span className="text-muted-foreground">외주업체: </span>
+                  <span className="text-muted-foreground">Agency: </span>
                   {project.agency.name}
                 </div>
               )}
@@ -138,13 +138,13 @@ export default function ProjectDetailPage() {
         {/* File Upload */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">파일 관리</CardTitle>
+            <CardTitle className="text-base">File Management</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Drop zone */}
             <div
               className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                dragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
+                dragOver ? 'border-[#FDB813] bg-[#FDB813]/5' : 'border-muted-foreground/25'
               }`}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
               onDragLeave={() => setDragOver(false)}
@@ -152,33 +152,33 @@ export default function ProjectDetailPage() {
             >
               <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground mb-2">
-                파일을 여기에 드래그하거나
+                Drag files here or
               </p>
               <label>
                 <input type="file" multiple className="hidden" onChange={handleFileSelect} />
                 <Button variant="outline" size="sm" asChild>
-                  <span>파일 선택</span>
+                  <span>Browse Files</span>
                 </Button>
               </label>
               {uploadFile.isPending && (
-                <p className="text-sm text-primary mt-2">업로드 중...</p>
+                <p className="text-sm text-[#199AC2] mt-2">Uploading...</p>
               )}
             </div>
 
             {/* File list */}
             {filesLoading ? (
-              <p className="text-sm text-muted-foreground">파일 로딩 중...</p>
+              <p className="text-sm text-muted-foreground">Loading files...</p>
             ) : files?.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">업로드된 파일이 없습니다</p>
+              <p className="text-sm text-muted-foreground text-center py-4">No files uploaded yet</p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>파일명</TableHead>
-                    <TableHead>버전</TableHead>
-                    <TableHead>크기</TableHead>
-                    <TableHead>업로더</TableHead>
-                    <TableHead>업로드일</TableHead>
+                    <TableHead>File Name</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Uploader</TableHead>
+                    <TableHead>Date</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>

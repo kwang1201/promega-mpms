@@ -39,13 +39,13 @@ export default function KanbanPage() {
 
   return (
     <>
-      <Header title="칸반 보드">
+      <Header title="KANBAN Board">
         <Select value={filterConference} onValueChange={setFilterConference}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="학회 필터" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">전체 학회</SelectItem>
+            <SelectItem value="all">All Conferences</SelectItem>
             {conferences?.map(c => (
               <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
             ))}
@@ -56,7 +56,7 @@ export default function KanbanPage() {
             <SelectValue placeholder="트랙 필터" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">전체 트랙</SelectItem>
+            <SelectItem value="all">All Tracks</SelectItem>
             {Object.entries(TRACK_TYPES).map(([key, { label, icon }]) => (
               <SelectItem key={key} value={key}>{icon} {label}</SelectItem>
             ))}
@@ -65,7 +65,7 @@ export default function KanbanPage() {
       </Header>
       <div className="p-4 overflow-x-auto">
         {isLoading ? (
-          <p className="text-muted-foreground p-4">로딩 중...</p>
+          <p className="text-muted-foreground p-4">Loading...</p>
         ) : (
           <div className="flex gap-3 min-w-max">
             {PROJECT_STATUS_ORDER.map(statusKey => {
@@ -107,7 +107,7 @@ export default function KanbanPage() {
                             </p>
                             {project.deadline && (
                               <p className="text-xs text-muted-foreground mt-1">
-                                마감: {format(new Date(project.deadline), 'MM.dd', { locale: ko })}
+                                Due: {format(new Date(project.deadline), 'MM.dd', { locale: ko })}
                               </p>
                             )}
                           </Link>

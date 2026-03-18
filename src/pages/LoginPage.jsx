@@ -8,10 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const ROLES = [
-  { value: 'owner', label: '학회 오너' },
-  { value: 'ms_staff', label: 'MS 담당자' },
-  { value: 'ms_manager', label: 'MS 관리자' },
-  { value: 'agency', label: '외주업체' },
+  { value: 'owner', label: '학회 Owner' },
+  { value: 'ms_staff', label: 'MS Staff' },
+  { value: 'ms_manager', label: 'MS Manager' },
+  { value: 'agency', label: 'Agency' },
   { value: 'scm', label: 'SCM' },
 ]
 
@@ -44,12 +44,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#F1F1F1] p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">마케팅 프로세스 관리</CardTitle>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="w-2 h-8 bg-[#FDB813] rounded-sm" />
+            <span className="text-lg font-bold text-[#13294B]">MKT Process</span>
+          </div>
+          <CardTitle className="text-2xl text-[#13294B]">Marketing Process Management</CardTitle>
           <CardDescription>
-            {isSignUp ? '새 계정을 만드세요' : '로그인하여 시작하세요'}
+            {isSignUp ? '새 계정을 만드세요' : 'Sign in to continue'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -57,7 +61,7 @@ export default function LoginPage() {
             {isSignUp && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="name">이름</Label>
+                  <Label htmlFor="name">Name</Label>
                   <Input
                     id="name"
                     value={name}
@@ -67,7 +71,7 @@ export default function LoginPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="role">역할</Label>
+                  <Label htmlFor="role">Role</Label>
                   <Select value={role} onValueChange={setRole}>
                     <SelectTrigger>
                       <SelectValue />
@@ -82,7 +86,7 @@ export default function LoginPage() {
               </>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">이메일</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -93,7 +97,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">비밀번호</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -110,7 +114,7 @@ export default function LoginPage() {
               </p>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? '처리 중...' : isSignUp ? '회원가입' : '로그인'}
+              {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
             </Button>
           </form>
           <div className="mt-4 text-center">
@@ -119,7 +123,7 @@ export default function LoginPage() {
               onClick={() => { setIsSignUp(!isSignUp); setError('') }}
               className="text-sm text-muted-foreground hover:text-foreground"
             >
-              {isSignUp ? '이미 계정이 있으신가요? 로그인' : '계정이 없으신가요? 회원가입'}
+              {isSignUp ? '이미 계정이 있으신가요? Sign In' : '계정이 없으신가요? Sign Up'}
             </button>
           </div>
         </CardContent>
