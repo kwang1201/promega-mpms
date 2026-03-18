@@ -24,8 +24,12 @@ export default function ConferenceForm({ open, onOpenChange, onSubmit, initialDa
   async function handleSubmit(e) {
     e.preventDefault()
     await onSubmit({
-      ...form,
+      name: form.name,
+      date_start: form.date_start,
+      date_end: form.date_end,
+      location: form.location || '',
       budget: form.budget ? Number(form.budget) : 0,
+      description: form.description || '',
       owner_id: initialData?.owner_id || user.id,
     })
     onOpenChange(false)
