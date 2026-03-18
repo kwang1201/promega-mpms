@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import { differenceInDays, format, isWithinInterval, startOfDay } from 'date-fns'
-import { ko } from 'date-fns/locale'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Gantt from 'frappe-gantt'
+import './frappe-gantt.css'
+import { format } from 'date-fns'
 import { PROJECT_STATUS, TRACK_TYPES } from '@/lib/constants'
 
 const STATUS_COLORS = {
@@ -14,114 +15,143 @@ const STATUS_COLORS = {
   completed: '#13294B',
 }
 
-export default function GanttChart({ projects = [], startDate, endDate }) {
-  const today = startOfDay(new Date())
-  const start = startOfDay(new Date(startDate))
-  const end = startOfDay(new Date(endDate))
-  const totalDays = differenceInDays(end, start) + 1
+export default function GanttChart({ projects = [] }) {
+  const containerRef = useRef(null)
+  const ganttRef = useRef(null)
+  const navigate = useNavigate()
+  const [viewMode, setViewMode] = useState('Week')
 
-  // Generate week markers
-  const weeks = useMemo(() => {
-    const result = []
-    const current = new Date(start)
-    while (current <= end) {
-      const dayOffset = differenceInDays(current, start)
-      result.push({ date: new Date(current), offset: dayOffset })
-      current.setDate(current.getDate() + 7)
+  useEffect(() => {
+    if (!containerRef.current || projects.length === 0) return
+
+    // Clear previous
+    containerRef.current.innerHTML = ''
+    const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    containerRef.current.appendChild(svgEl)
+
+    const tasks = projects.map(p => {
+      const track = TRACK_TYPES[p.track_type]
+      const startDate = p.created_at ? new Date(p.created_at) : new Date()
+      const endDate = p.deadline ? new Date(p.deadline) : new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000)
+
+      return {
+        id: p.id,
+        name: `${track?.icon || ''} ${p.title}`,
+        start: format(startDate, 'yyyy-MM-dd'),
+        end: format(endDate, 'yyyy-MM-dd'),
+        progress: p.status === 'completed' ? 100
+          : p.status === 'approved' ? 80
+          : p.status === 'in_review' ? 60
+          : p.status === 'in_production' ? 40
+          : p.status === 'quotation' ? 20
+          : 5,
+        custom_class: `gantt-bar-${p.status}`,
+      }
+    })
+
+    try {
+      ganttRef.current = new Gantt(svgEl, tasks, {
+        view_mode: viewMode,
+        date_format: 'YYYY-MM-DD',
+        bar_height: 28,
+        bar_corner_radius: 4,
+        padding: 14,
+        language: 'en',
+        on_click: (task) => {
+          navigate(`/projects/${task.id}`)
+        },
+      })
+    } catch (e) {
+      console.error('Gantt init error:', e)
     }
-    return result
-  }, [start, end])
-
-  const todayOffset = differenceInDays(today, start)
-  const showToday = todayOffset >= 0 && todayOffset <= totalDays
+  }, [projects, viewMode, navigate])
 
   if (projects.length === 0) {
     return <p className="text-sm text-muted-foreground text-center py-8">No projects with deadlines</p>
   }
 
   return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[800px]">
-        {/* Header: week markers */}
-        <div className="flex border-b pb-1 mb-2 ml-[200px] relative" style={{ width: `${totalDays * 4}px` }}>
-          {weeks.map((w, i) => (
-            <div
-              key={i}
-              className="absolute text-[10px] text-muted-foreground"
-              style={{ left: `${w.offset * 4}px` }}
-            >
-              {format(w.date, 'MM.dd', { locale: ko })}
-            </div>
-          ))}
-        </div>
+    <div className="space-y-3">
+      {/* View mode toggle */}
+      <div className="flex gap-1">
+        {['Day', 'Week', 'Month'].map(mode => (
+          <button
+            key={mode}
+            onClick={() => setViewMode(mode)}
+            className={`px-3 py-1 text-xs rounded-md transition-colors ${
+              viewMode === mode
+                ? 'bg-[#13294B] text-white'
+                : 'bg-[#F1F1F1] text-[#515151] hover:bg-[#EBE7E3]'
+            }`}
+          >
+            {mode}
+          </button>
+        ))}
+      </div>
 
-        {/* Rows */}
-        <div className="space-y-1">
-          {projects.map(project => {
-            const track = TRACK_TYPES[project.track_type]
-            const status = PROJECT_STATUS[project.status]
-            const projStart = project.created_at ? startOfDay(new Date(project.created_at)) : start
-            const projEnd = project.deadline ? startOfDay(new Date(project.deadline)) : end
+      {/* Gantt container */}
+      <div
+        ref={containerRef}
+        className="overflow-x-auto gantt-container"
+      />
 
-            const barStart = Math.max(0, differenceInDays(projStart, start))
-            const barEnd = Math.min(totalDays, differenceInDays(projEnd, start) + 1)
-            const barWidth = Math.max(barEnd - barStart, 1)
+      {/* Custom styles for frappe-gantt */}
+      <style>{`
+        .gantt-container .gantt .bar-wrapper .bar {
+          fill: #455DA0;
+        }
+        .gantt-container .gantt .bar-wrapper .bar-progress {
+          fill: #199AC2;
+        }
+        .gantt-container .gantt .bar-wrapper:hover .bar {
+          fill: #13294B;
+        }
+        .gantt-container .gantt .bar-label {
+          fill: #fff;
+          font-size: 11px;
+          font-family: 'Roboto Flex Variable', sans-serif;
+        }
+        .gantt-container .gantt .grid-header {
+          fill: #F1F1F1;
+        }
+        .gantt-container .gantt .grid-row {
+          fill: #fff;
+        }
+        .gantt-container .gantt .grid-row:nth-child(even) {
+          fill: #fafafa;
+        }
+        .gantt-container .gantt .today-highlight {
+          fill: rgba(253, 184, 19, 0.1);
+        }
+        .gantt-container .gantt .lower-text, .gantt-container .gantt .upper-text {
+          font-family: 'Roboto Flex Variable', sans-serif;
+          font-size: 11px;
+          fill: #515151;
+        }
+        .gantt-bar-draft .bar { fill: #EBE7E3 !important; }
+        .gantt-bar-draft .bar-progress { fill: #bbb !important; }
+        .gantt-bar-quotation .bar { fill: #199AC2 !important; }
+        .gantt-bar-quotation .bar-progress { fill: #13294B !important; }
+        .gantt-bar-in_production .bar { fill: #FDB813 !important; }
+        .gantt-bar-in_production .bar-progress { fill: #946d00 !important; }
+        .gantt-bar-in_review .bar { fill: #713A61 !important; }
+        .gantt-bar-in_review .bar-progress { fill: #5a2d4d !important; }
+        .gantt-bar-approved .bar { fill: #199AC2 !important; }
+        .gantt-bar-approved .bar-progress { fill: #13294B !important; }
+        .gantt-bar-final_prep .bar { fill: #455DA0 !important; }
+        .gantt-bar-final_prep .bar-progress { fill: #13294B !important; }
+        .gantt-bar-completed .bar { fill: #13294B !important; }
+        .gantt-bar-completed .bar-progress { fill: #13294B !important; }
+      `}</style>
 
-            return (
-              <div key={project.id} className="flex items-center group">
-                {/* Label */}
-                <Link
-                  to={`/projects/${project.id}`}
-                  className="w-[200px] shrink-0 pr-3 truncate text-xs hover:text-[#199AC2]"
-                  title={project.title}
-                >
-                  <span className="mr-1">{track?.icon}</span>
-                  {project.title}
-                </Link>
-                {/* Bar area */}
-                <div className="relative h-7" style={{ width: `${totalDays * 4}px` }}>
-                  {/* Background grid */}
-                  <div className="absolute inset-0 bg-[#F1F1F1] rounded" />
-                  {/* Today marker */}
-                  {showToday && (
-                    <div
-                      className="absolute top-0 bottom-0 w-px bg-red-400 z-10"
-                      style={{ left: `${todayOffset * 4}px` }}
-                    />
-                  )}
-                  {/* Project bar */}
-                  <div
-                    className="absolute top-1 bottom-1 rounded-sm transition-all group-hover:brightness-110"
-                    style={{
-                      left: `${barStart * 4}px`,
-                      width: `${barWidth * 4}px`,
-                      backgroundColor: STATUS_COLORS[project.status] || '#EBE7E3',
-                      minWidth: '8px',
-                    }}
-                  >
-                    <span className="text-[9px] text-white px-1 truncate block leading-5 font-medium">
-                      {status?.label}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Legend */}
-        <div className="flex gap-3 mt-4 ml-[200px] flex-wrap">
-          {Object.entries(PROJECT_STATUS).map(([key, { label }]) => (
-            <div key={key} className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: STATUS_COLORS[key] }} />
-              <span className="text-[10px] text-muted-foreground">{label}</span>
-            </div>
-          ))}
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-px bg-red-400" />
-            <span className="text-[10px] text-muted-foreground">Today</span>
+      {/* Legend */}
+      <div className="flex gap-3 flex-wrap">
+        {Object.entries(PROJECT_STATUS).map(([key, { label }]) => (
+          <div key={key} className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: STATUS_COLORS[key] }} />
+            <span className="text-[10px] text-muted-foreground">{label}</span>
           </div>
-        </div>
+        ))}
       </div>
     </div>
   )

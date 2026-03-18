@@ -15,28 +15,6 @@ export default function GanttPage() {
     ? allProjects.filter(p => p.deadline)
     : allProjects.filter(p => p.conference_id === selectedConference && p.deadline)
 
-  // Calculate date range
-  const conference = conferences.find(c => c.id === selectedConference)
-  let startDate, endDate
-
-  if (conference) {
-    startDate = conference.date_start
-    endDate = conference.date_end
-  } else if (filtered.length > 0) {
-    const dates = filtered.flatMap(p => [
-      new Date(p.created_at),
-      p.deadline ? new Date(p.deadline) : new Date()
-    ])
-    startDate = new Date(Math.min(...dates)).toISOString().split('T')[0]
-    const maxDate = new Date(Math.max(...dates))
-    maxDate.setDate(maxDate.getDate() + 7)
-    endDate = maxDate.toISOString().split('T')[0]
-  } else {
-    const now = new Date()
-    startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-    endDate = new Date(now.getFullYear(), now.getMonth() + 3, 0).toISOString().split('T')[0]
-  }
-
   return (
     <>
       <Header title="Gantt Chart">
@@ -66,11 +44,7 @@ export default function GanttPage() {
             {isLoading ? (
               <p className="text-sm text-muted-foreground">Loading...</p>
             ) : (
-              <GanttChart
-                projects={filtered}
-                startDate={startDate}
-                endDate={endDate}
-              />
+              <GanttChart projects={filtered} />
             )}
           </CardContent>
         </Card>
