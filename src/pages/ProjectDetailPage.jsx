@@ -93,10 +93,10 @@ export default function ProjectDetailPage() {
   return (
     <>
       <Header title={project.title}>
-        <Link to={`/conferences/${project.conference_id}`}>
+        <Link to={project.conference_id ? `/conferences/${project.conference_id}` : '/requests'}>
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to Conference
+            {project.conference_id ? 'Back to Conference' : 'Back to Requests'}
           </Button>
         </Link>
       </Header>

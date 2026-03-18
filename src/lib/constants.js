@@ -28,6 +28,7 @@ export const TRACK_TYPES = {
   giveaway: { label: 'Giveaway', icon: '🎁' },
   poster: { label: 'SCM Poster', icon: '📄' },
   survey: { label: 'Survey/Tent', icon: '📋' },
+  print: { label: 'Print', icon: '🖨️' },
 }
 
 export const ROLES = {
