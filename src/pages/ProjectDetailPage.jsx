@@ -18,8 +18,10 @@ import ActivityLog from '@/components/activity/ActivityLog'
 import { useProject, useUpdateProject } from '@/hooks/useProjects'
 import { useFiles, useUploadFile, getSignedUrl } from '@/hooks/useFiles'
 import { useLogActivity } from '@/hooks/useActivityLog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuth } from '@/contexts/AuthContext'
 import { notifyProjectMembers } from '@/lib/notify'
+import { useBrandAssets, getBrandAssetUrl, archiveReleasedFiles } from '@/hooks/useBrandAssets'
 import { PROJECT_STATUS, TRACK_TYPES, AGENCY_VISIBLE_STATUSES } from '@/lib/constants'
 
 function formatFileSize(bytes) {
@@ -37,7 +39,9 @@ export default function ProjectDetailPage() {
   const updateProject = useUpdateProject()
   const uploadFile = useUploadFile()
   const logActivity = useLogActivity()
+  const { data: brandAssets = [] } = useBrandAssets('all')
   const [dragOver, setDragOver] = useState(false)
+  const [showAssetPicker, setShowAssetPicker] = useState(false)
 
   const handleWorkflowAction = useCallback(async ({ targetStatus, actionKey, file, fileCategory }) => {
     if (!project || !user) return
@@ -54,6 +58,16 @@ export default function ProjectDetailPage() {
 
     // Update project status
     await updateProject.mutateAsync({ id: project.id, status: targetStatus })
+
+    // Auto-archive files to Brand Assets when releasing
+    if (targetStatus === 'released') {
+      archiveReleasedFiles({
+        projectId: project.id,
+        projectTitle: project.title,
+        trackType: project.track_type,
+        userId: user.id,
+      }).catch(() => {}) // Don't block workflow on archive failure
+    }
 
     // Log activity
     await logActivity.mutateAsync({
@@ -321,12 +335,17 @@ export default function ProjectDetailPage() {
                 >
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground mb-2">Drag files here or</p>
-                  <label>
-                    <input type="file" multiple className="hidden" onChange={handleFileSelect} />
-                    <Button variant="outline" size="sm" asChild>
-                      <span>Browse Files</span>
+                  <div className="flex gap-2 justify-center">
+                    <label>
+                      <input type="file" multiple className="hidden" onChange={handleFileSelect} />
+                      <Button variant="outline" size="sm" asChild>
+                        <span>Browse Files</span>
+                      </Button>
+                    </label>
+                    <Button variant="outline" size="sm" onClick={() => setShowAssetPicker(true)}>
+                      Import from Brand Assets
                     </Button>
-                  </label>
+                  </div>
                   {uploadFile.isPending && (
                     <p className="text-sm text-[#199AC2] mt-2">Uploading...</p>
                   )}
@@ -415,6 +434,56 @@ export default function ProjectDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Brand Assets Picker Dialog */}
+      <Dialog open={showAssetPicker} onOpenChange={setShowAssetPicker}>
+        <DialogContent className="max-w-lg max-h-[70vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Import from Brand Assets</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {brandAssets.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No brand assets available</p>
+            ) : (
+              brandAssets.map(asset => (
+                <div
+                  key={asset.id}
+                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 cursor-pointer"
+                  onClick={async () => {
+                    const { data } = await getBrandAssetUrl(asset.file_path)
+                    if (data?.signedUrl) {
+                      const res = await fetch(data.signedUrl)
+                      const blob = await res.blob()
+                      const fileName = asset.name.replace(/[[\]]/g, '').split(' ').pop() || asset.name
+                      const file = new File([blob], fileName, { type: asset.mime_type })
+                      await uploadFile.mutateAsync({
+                        projectId: project.id,
+                        conferenceId: project.conference_id,
+                        file,
+                      })
+                      await logActivity.mutateAsync({
+                        projectId: project.id,
+                        userId: user.id,
+                        action: 'file_upload',
+                        details: { filename: asset.name, source: 'brand_assets' },
+                      })
+                      setShowAssetPicker(false)
+                    }
+                  }}
+                >
+                  <div>
+                    <p className="text-sm font-medium">{asset.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {asset.category} • {formatFileSize(asset.file_size)}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="text-xs capitalize">{asset.category}</Badge>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

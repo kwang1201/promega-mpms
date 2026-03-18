@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Header from '@/components/layout/Header'
 import AssetGrid from '@/components/assets/AssetGrid'
@@ -15,18 +16,24 @@ const CATEGORIES = [
   { value: 'template', label: 'Template' },
   { value: 'font', label: 'Font' },
   { value: 'guideline', label: 'Guideline' },
+  { value: 'released', label: 'Released Files' },
   { value: 'other', label: 'Other' },
 ]
 
 export default function BrandAssetsPage() {
   const { profile } = useAuth()
   const [category, setCategory] = useState('all')
+  const [search, setSearch] = useState('')
   const [showUpload, setShowUpload] = useState(false)
   const { data: assets = [], isLoading } = useBrandAssets(category)
   const uploadAsset = useUploadBrandAsset()
   const deleteAsset = useDeleteBrandAsset()
 
   const canManage = ['ms_staff', 'ms_manager'].includes(profile?.role)
+
+  const filtered = search
+    ? assets.filter(a => a.name.toLowerCase().includes(search.toLowerCase()))
+    : assets
 
   async function handleUpload({ file, name, category, description }) {
     await uploadAsset.mutateAsync({ file, name, category, description })
@@ -48,9 +55,20 @@ export default function BrandAssetsPage() {
           </Button>
         )}
       </Header>
-      <div className="p-6">
+      <div className="p-6 space-y-4">
+        {/* Search */}
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search assets..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
         <Tabs value={category} onValueChange={setCategory}>
-          <TabsList className="mb-4">
+          <TabsList className="mb-4 flex-wrap">
             {CATEGORIES.map(c => (
               <TabsTrigger key={c.value} value={c.value}>{c.label}</TabsTrigger>
             ))}
@@ -61,7 +79,7 @@ export default function BrandAssetsPage() {
                 <p className="text-sm text-muted-foreground">Loading...</p>
               ) : (
                 <AssetGrid
-                  assets={assets}
+                  assets={filtered}
                   onDelete={handleDelete}
                   canManage={canManage}
                 />

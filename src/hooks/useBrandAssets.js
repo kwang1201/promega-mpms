@@ -68,3 +68,42 @@ export function useDeleteBrandAsset() {
 export function getBrandAssetUrl(filePath) {
   return supabase.storage.from('brand-assets').createSignedUrl(filePath, 3600)
 }
+
+// Archive released project files to brand assets
+export async function archiveReleasedFiles({ projectId, projectTitle, trackType, userId }) {
+  // Get all files from the project
+  const { data: files, error: filesError } = await supabase
+    .from('files')
+    .select('*')
+    .eq('project_id', projectId)
+
+  if (filesError || !files?.length) return
+
+  for (const file of files) {
+    // Download from marketing-files bucket
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from('marketing-files')
+      .download(file.storage_path)
+
+    if (downloadError || !fileData) continue
+
+    // Upload to brand-assets bucket
+    const storagePath = `released/${trackType}/${Date.now()}_${file.original_name}`
+    const { error: uploadError } = await supabase.storage
+      .from('brand-assets')
+      .upload(storagePath, fileData)
+
+    if (uploadError) continue
+
+    // Create brand_assets record
+    await supabase.from('brand_assets').insert({
+      name: `[${projectTitle}] ${file.original_name}`,
+      category: 'released',
+      description: `Released from project: ${projectTitle} (${trackType})`,
+      file_path: storagePath,
+      file_size: file.file_size,
+      mime_type: file.mime_type,
+      uploaded_by: userId,
+    })
+  }
+}
