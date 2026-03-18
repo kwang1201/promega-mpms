@@ -109,12 +109,21 @@ export default function LoginPage() {
               />
             </div>
             {error && (
-              <p className={`text-sm ${error.includes('완료') ? 'text-green-600' : 'text-destructive'}`}>
+              <div className={`text-sm px-3 py-2 rounded-md ${
+                error.includes('완료')
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
+              }`}>
                 {error}
-              </p>
+              </div>
             )}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
+            <Button type="submit" className="w-full bg-[#13294B] hover:bg-[#13294B]/90" disabled={loading}>
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Processing...
+                </span>
+              ) : isSignUp ? 'Sign Up' : 'Sign In'}
             </Button>
           </form>
           <div className="mt-4 text-center">

@@ -92,7 +92,21 @@ export default function ProjectDetailPage() {
 
   return (
     <>
-      <Header title={project.title}>
+      <Header
+        title={project.title}
+        breadcrumbs={
+          project.conference_id
+            ? [
+                { label: 'Conferences', href: '/conferences' },
+                { label: project.conference?.name || 'Conference', href: `/conferences/${project.conference_id}` },
+                { label: project.title }
+              ]
+            : [
+                { label: 'Requests', href: '/requests' },
+                { label: project.title }
+              ]
+        }
+      >
         <Link to={project.conference_id ? `/conferences/${project.conference_id}` : '/requests'}>
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-1" />

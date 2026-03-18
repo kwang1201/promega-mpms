@@ -11,7 +11,7 @@ export default function ConferenceCard({ conference }) {
 
   return (
     <Link to={`/conferences/${conference.id}`}>
-      <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+      <Card className="card-hover cursor-pointer h-full">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="text-base leading-tight">{conference.name}</CardTitle>

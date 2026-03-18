@@ -17,6 +17,7 @@ export default function KanbanPage() {
   const [filterConference, setFilterConference] = useState('all')
   const [filterTrack, setFilterTrack] = useState('all')
   const [draggedId, setDraggedId] = useState(null)
+  const [dragOverCol, setDragOverCol] = useState(null)
 
   const filtered = projects?.filter(p => {
     if (filterConference !== 'all' && p.conference_id !== filterConference) return false
@@ -31,6 +32,7 @@ export default function KanbanPage() {
 
   function handleDrop(e, newStatus) {
     e.preventDefault()
+    setDragOverCol(null)
     if (draggedId) {
       updateProject.mutate({ id: draggedId, status: newStatus })
       setDraggedId(null)
@@ -75,7 +77,8 @@ export default function KanbanPage() {
                 <div
                   key={statusKey}
                   className="w-64 shrink-0"
-                  onDragOver={e => e.preventDefault()}
+                  onDragOver={e => { e.preventDefault(); setDragOverCol(statusKey) }}
+                  onDragLeave={() => setDragOverCol(null)}
                   onDrop={e => handleDrop(e, statusKey)}
                 >
                   <div className="flex items-center gap-2 mb-3 px-1">
@@ -84,7 +87,9 @@ export default function KanbanPage() {
                     </Badge>
                     <span className="text-xs text-muted-foreground">{columnProjects.length}</span>
                   </div>
-                  <div className="space-y-2 min-h-[200px] bg-muted/30 rounded-lg p-2">
+                  <div className={`space-y-2 min-h-[200px] rounded-lg p-2 transition-all ${
+                    dragOverCol === statusKey ? 'kanban-drop-active' : 'bg-muted/30'
+                  }`}>
                     {columnProjects.map(project => {
                       const track = TRACK_TYPES[project.track_type]
                       return (

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Building2, FolderKanban, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useConferences } from '@/hooks/useConferences'
 import { useProjects } from '@/hooks/useProjects'
 import { useAllCosts } from '@/hooks/useCosts'
@@ -39,7 +40,20 @@ export default function DashboardPage() {
       <Header title={`Welcome, ${profile?.name || 'User'}`} />
       <div className="p-6 space-y-6">
         {isLoading ? (
-          <p className="text-muted-foreground">Loading...</p>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1,2,3,4].map(i => (
+                <Card key={i}><CardContent className="pt-6"><div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <div><Skeleton className="h-7 w-12 mb-1" /><Skeleton className="h-4 w-24" /></div>
+                </div></CardContent></Card>
+              ))}
+            </div>
+            <Skeleton className="h-48 rounded-lg" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Skeleton className="h-48 rounded-lg" /><Skeleton className="h-48 rounded-lg" />
+            </div>
+          </div>
         ) : (
           <>
             {/* Summary Cards */}

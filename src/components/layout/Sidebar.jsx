@@ -19,7 +19,7 @@ const AGENCY_NAV = [
   { to: '/kanban', icon: Columns3, label: 'KANBAN Board' },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ onNavigate }) {
   const { profile, signOut } = useAuth()
   const isAgency = profile?.role === 'agency'
   const navItems = isAgency ? AGENCY_NAV : INTERNAL_NAV
@@ -46,6 +46,7 @@ export default function Sidebar() {
             key={item.to}
             to={item.to}
             end={item.to === '/'}
+            onClick={onNavigate}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
                 isActive

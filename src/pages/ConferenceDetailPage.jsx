@@ -42,13 +42,13 @@ export default function ConferenceDetailPage() {
 
   return (
     <>
-      <Header title={conference.name}>
-        <Link to="/conferences">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            List
-          </Button>
-        </Link>
+      <Header
+        title={conference.name}
+        breadcrumbs={[
+          { label: 'Conferences', href: '/conferences' },
+          { label: conference.name }
+        ]}
+      >
         <Button variant="outline" size="sm" onClick={() => setShowEditForm(true)}>
           <Pencil className="h-4 w-4 mr-1" />
           Edit
