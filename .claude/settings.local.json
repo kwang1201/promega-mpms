@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm create:*)",
+      "Bash(cp temp-init/index.html temp-init/vite.config.js temp-init/eslint.config.js .)",
+      "Bash(cp -r temp-init/src .)",
+      "Bash(cp -r temp-init/public .)",
+      "Bash(rm -rf temp-init)",
+      "Bash(npx vite:*)",
+      "Bash(npx shadcn@latest init -d --defaults)",
+      "Bash(npx shadcn@latest init -d)"
+    ]
+  }
+}
