@@ -4,30 +4,33 @@ import { Badge } from '@/components/ui/badge'
 import { Building2, FolderKanban, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { useConferences } from '@/hooks/useConferences'
 import { useProjects } from '@/hooks/useProjects'
-import { CONFERENCE_STATUS, PROJECT_STATUS, TRACK_TYPES } from '@/lib/constants'
+import { useAllCosts } from '@/hooks/useCosts'
+import { CONFERENCE_STATUS } from '@/lib/constants'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/layout/Header'
+import BudgetChart from '@/components/dashboard/BudgetChart'
+import TrackProgress from '@/components/dashboard/TrackProgress'
+import AgencyStats from '@/components/dashboard/AgencyStats'
 import { format, isPast, addDays, isAfter } from 'date-fns'
 import { ko } from 'date-fns/locale'
 
 export default function DashboardPage() {
   const { profile } = useAuth()
-  const { data: conferences, isLoading: confLoading } = useConferences()
-  const { data: projects, isLoading: projLoading } = useProjects()
+  const { data: conferences = [], isLoading: confLoading } = useConferences()
+  const { data: projects = [], isLoading: projLoading } = useProjects()
+  const { data: costs = [] } = useAllCosts()
 
-  const activeConferences = conferences?.filter(c => !['completed', 'settled'].includes(c.status)) || []
-  const totalProjects = projects?.length || 0
-  const inProgressProjects = projects?.filter(p => !['completed'].includes(p.status)).length || 0
-  const completedProjects = projects?.filter(p => p.status === 'completed').length || 0
+  const activeConferences = conferences.filter(c => !['completed', 'settled'].includes(c.status))
+  const inProgressProjects = projects.filter(p => p.status !== 'completed').length
+  const completedProjects = projects.filter(p => p.status === 'completed').length
 
-  // Overdue / upcoming deadline projects
   const now = new Date()
-  const overdueProjects = projects?.filter(p =>
+  const overdueProjects = projects.filter(p =>
     p.deadline && isPast(new Date(p.deadline)) && p.status !== 'completed'
-  ) || []
-  const upcomingProjects = projects?.filter(p =>
+  )
+  const upcomingProjects = projects.filter(p =>
     p.deadline && !isPast(new Date(p.deadline)) && isAfter(addDays(now, 3), new Date(p.deadline)) && p.status !== 'completed'
-  ) || []
+  )
 
   const isLoading = confLoading || projLoading
 
@@ -127,6 +130,15 @@ export default function DashboardPage() {
               </Card>
             )}
 
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <BudgetChart conferences={conferences} costs={costs} />
+              <TrackProgress projects={projects} />
+            </div>
+
+            {/* Agency Stats */}
+            <AgencyStats projects={projects} />
+
             {/* Active Conferences */}
             <Card>
               <CardHeader>
@@ -138,7 +150,7 @@ export default function DashboardPage() {
                 ) : (
                   <div className="space-y-3">
                     {activeConferences.map(conf => {
-                      const confProjects = projects?.filter(p => p.conference_id === conf.id) || []
+                      const confProjects = projects.filter(p => p.conference_id === conf.id)
                       const confStatus = CONFERENCE_STATUS[conf.status]
                       return (
                         <Link

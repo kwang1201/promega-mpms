@@ -9,6 +9,7 @@ import ConferencesPage from '@/pages/ConferencesPage'
 import ConferenceDetailPage from '@/pages/ConferenceDetailPage'
 import ProjectDetailPage from '@/pages/ProjectDetailPage'
 import KanbanPage from '@/pages/KanbanPage'
+import CostManagementPage from '@/pages/CostManagementPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +39,7 @@ function App() {
               <Route path="/conferences/:id" element={<ConferenceDetailPage />} />
               <Route path="/projects/:id" element={<ProjectDetailPage />} />
               <Route path="/kanban" element={<KanbanPage />} />
+              <Route path="/costs" element={<CostManagementPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

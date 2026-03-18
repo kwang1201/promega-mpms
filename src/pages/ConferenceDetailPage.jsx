@@ -10,14 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Header from '@/components/layout/Header'
 import ProjectForm from '@/components/projects/ProjectForm'
 import ConferenceForm from '@/components/conferences/ConferenceForm'
+import CostSummary from '@/components/costs/CostSummary'
 import { useConference, useUpdateConference } from '@/hooks/useConferences'
 import { useProjects, useCreateProject, useUpdateProject } from '@/hooks/useProjects'
+import { useCosts } from '@/hooks/useCosts'
 import { CONFERENCE_STATUS, PROJECT_STATUS, TRACK_TYPES } from '@/lib/constants'
 
 export default function ConferenceDetailPage() {
   const { id } = useParams()
   const { data: conference, isLoading: confLoading } = useConference(id)
   const { data: projects, isLoading: projLoading } = useProjects(id)
+  const { data: costs = [] } = useCosts(id)
   const updateConference = useUpdateConference()
   const createProject = useCreateProject()
   const updateProject = useUpdateProject()
@@ -104,6 +107,9 @@ export default function ConferenceDetailPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Cost Summary */}
+        <CostSummary budget={Number(conference.budget || 0)} costs={costs} />
 
         {/* Track Progress */}
         <div className="flex items-center justify-between">

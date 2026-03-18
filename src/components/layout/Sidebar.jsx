@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Building2, Columns3, FolderKanban, LogOut } from 'lucide-react'
+import { LayoutDashboard, Building2, Columns3, CircleDollarSign, LogOut } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { ROLES } from '@/lib/constants'
@@ -8,6 +8,7 @@ const INTERNAL_NAV = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/conferences', icon: Building2, label: 'Conferences' },
   { to: '/kanban', icon: Columns3, label: 'KANBAN Board' },
+  { to: '/costs', icon: CircleDollarSign, label: 'Cost Management' },
 ]
 
 const AGENCY_NAV = [
