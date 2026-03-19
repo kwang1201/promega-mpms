@@ -34,7 +34,9 @@ export function useUploadFile() {
         .limit(1)
 
       const version = existing?.length > 0 ? existing[0].version + 1 : 1
-      const storagePath = `${conferenceId || 'requests'}/${projectId}/v${version}_${file.name}`
+      // Sanitize filename for storage (replace non-ASCII and special chars)
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+      const storagePath = `${conferenceId || 'requests'}/${projectId}/v${version}_${safeName}`
 
       // Upload to storage
       const { error: uploadError } = await supabase.storage
@@ -47,7 +49,7 @@ export function useUploadFile() {
         .from('files')
         .insert({
           project_id: projectId,
-          filename: `v${version}_${file.name}`,
+          filename: `v${version}_${safeName}`,
           original_name: file.name,
           version,
           file_size: file.size,
