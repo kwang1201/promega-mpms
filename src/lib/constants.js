@@ -41,18 +41,18 @@ export const WORKFLOW_ACTIONS = {
     { key: 'return_to_draft', label: '초안으로 반려', target: 'draft', roles: ['ms_staff', 'ms_manager'], variant: 'destructive', confirm: true },
   ],
   owner_review: [
-    { key: 'approve_to_quotation', label: '승인 → 견적 요청', target: 'quotation_request', roles: ['user'], variant: 'default' },
-    { key: 'request_changes', label: '수정 요청', target: 'ms_review', roles: ['user'], variant: 'destructive', confirm: true },
+    { key: 'approve_to_quotation', label: '승인 → 견적 요청', target: 'quotation_request', roles: ['user', 'ms_manager'], variant: 'default' },
+    { key: 'request_changes', label: '수정 요청', target: 'ms_review', roles: ['user', 'ms_manager'], variant: 'destructive', confirm: true },
   ],
   quotation_request: [
-    { key: 'submit_quotation', label: '견적서 제출', target: 'quotation_received', roles: ['agency'], variant: 'default', requireFile: 'quotation' },
+    { key: 'submit_quotation', label: '견적서 제출', target: 'quotation_received', roles: ['agency', 'ms_manager'], variant: 'default', requireFile: 'quotation' },
   ],
   quotation_received: [
     { key: 'send_for_approval', label: 'User 승인 요청', target: 'quotation_approved', roles: ['ms_staff', 'ms_manager'], variant: 'default' },
   ],
   quotation_approved: [
-    { key: 'approve_quotation', label: '견적 승인', target: 'released', roles: ['user'], variant: 'default' },
-    { key: 'reject_quotation', label: '견적 반려', target: 'quotation_received', roles: ['user'], variant: 'destructive', confirm: true },
+    { key: 'approve_quotation', label: '견적 승인', target: 'released', roles: ['user', 'ms_manager'], variant: 'default' },
+    { key: 'reject_quotation', label: '견적 반려', target: 'quotation_received', roles: ['user', 'ms_manager'], variant: 'destructive', confirm: true },
   ],
   released: [
     { key: 'start_production', label: '제작 시작', target: 'in_production', roles: ['ms_staff', 'ms_manager'], variant: 'default' },
