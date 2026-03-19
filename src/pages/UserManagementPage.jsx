@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { Shield, CheckCircle, XCircle } from 'lucide-react'
+import { Shield, CheckCircle, XCircle, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,7 +11,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton'
 import Header from '@/components/layout/Header'
 import EmptyState from '@/components/ui/EmptyState'
-import { useUsers, useUpdateUser } from '@/hooks/useUsers'
+import { useUsers, useUpdateUser, useDeleteUser } from '@/hooks/useUsers'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { AlertTriangle } from 'lucide-react'
 import { ROLES } from '@/lib/constants'
 
 const STATUS_BADGE = {
@@ -23,6 +25,8 @@ const STATUS_BADGE = {
 export default function UserManagementPage() {
   const { data: users = [], isLoading } = useUsers()
   const updateUser = useUpdateUser()
+  const deleteUser = useDeleteUser()
+  const [deleteTarget, setDeleteTarget] = useState(null)
 
   const pendingUsers = users.filter(u => u.status === 'pending')
   const approvedUsers = users.filter(u => u.status !== 'pending')
@@ -135,6 +139,7 @@ export default function UserManagementPage() {
                       <TableHead>Company</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Joined</TableHead>
+                      <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -173,6 +178,16 @@ export default function UserManagementPage() {
                           <TableCell className="text-xs text-muted-foreground">
                             {format(new Date(user.created_at), 'yyyy.MM.dd', { locale: ko })}
                           </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive h-7 w-7 p-0"
+                              onClick={() => setDeleteTarget(user)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       )
                     })}
@@ -183,6 +198,34 @@ export default function UserManagementPage() {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              사용자 삭제
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            <strong>{deleteTarget?.name}</strong> ({deleteTarget?.email})을(를) 삭제하시겠습니까?
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>취소</Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                await deleteUser.mutateAsync(deleteTarget.id)
+                setDeleteTarget(null)
+                toast.success('User deleted')
+              }}
+            >
+              삭제
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

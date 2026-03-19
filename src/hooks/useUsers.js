@@ -15,6 +15,17 @@ export function useUsers() {
   })
 }
 
+export function useDeleteUser() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase.from('users').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] })
+  })
+}
+
 export function useUpdateUser() {
   const queryClient = useQueryClient()
   return useMutation({
