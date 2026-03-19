@@ -608,12 +608,26 @@ export default function ProjectDetailPage() {
             </div>
             {revisionFile?.targetName && (
               <div>
-                <p className="text-sm text-muted-foreground mb-2">수정본 파일 선택:</p>
-                <input
-                  type="file"
-                  className="text-sm"
-                  onChange={(e) => setRevisionFile(prev => ({ ...prev, file: e.target.files[0] }))}
-                />
+                <p className="text-sm font-medium mb-2">수정본 파일 선택:</p>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('revision-file-input').click()}
+                  >
+                    <Upload className="h-4 w-4 mr-1" />
+                    파일 찾기
+                  </Button>
+                  <input
+                    id="revision-file-input"
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => setRevisionFile(prev => ({ ...prev, file: e.target.files[0] }))}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {revisionFile?.file ? revisionFile.file.name : '선택된 파일 없음'}
+                  </span>
+                </div>
               </div>
             )}
           </div>
