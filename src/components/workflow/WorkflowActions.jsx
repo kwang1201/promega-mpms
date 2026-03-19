@@ -4,21 +4,32 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { AlertTriangle, ArrowRight, Upload } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { AlertTriangle, ArrowRight, Upload, Users } from 'lucide-react'
 import { WORKFLOW_ACTIONS } from '@/lib/constants'
+import { useAgencyUsers } from '@/hooks/useProjects'
 
 export default function WorkflowActions({ project, profile, onAction }) {
   const [confirmAction, setConfirmAction] = useState(null)
   const [fileAction, setFileAction] = useState(null)
   const [selectedFile, setSelectedFile] = useState(null)
+  const [agencyAction, setAgencyAction] = useState(null)
+  const [selectedAgencyId, setSelectedAgencyId] = useState('')
+  const { data: agencyUsers = [] } = useAgencyUsers()
 
   const actions = WORKFLOW_ACTIONS[project.status] || []
   const visibleActions = actions.filter(a => a.roles.includes(profile?.role))
 
   if (visibleActions.length === 0) return null
 
+  // Actions that move to quotation_request need agency selection
+  const needsAgencySelect = (action) =>
+    action.target === 'quotation_request' && !project.agency_id
+
   function handleClick(action) {
-    if (action.confirm) {
+    if (needsAgencySelect(action)) {
+      setAgencyAction(action)
+    } else if (action.confirm) {
       setConfirmAction(action)
     } else if (action.requireFile) {
       setFileAction(action)
@@ -44,6 +55,18 @@ export default function WorkflowActions({ project, profile, onAction }) {
       })
       setFileAction(null)
       setSelectedFile(null)
+    }
+  }
+
+  function handleAgencySubmit() {
+    if (agencyAction && selectedAgencyId) {
+      onAction({
+        targetStatus: agencyAction.target,
+        actionKey: agencyAction.key,
+        agencyId: selectedAgencyId,
+      })
+      setAgencyAction(null)
+      setSelectedAgencyId('')
     }
   }
 
@@ -88,6 +111,48 @@ export default function WorkflowActions({ project, profile, onAction }) {
               onClick={handleConfirm}
             >
               확인
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Agency Selection Dialog */}
+      <Dialog open={!!agencyAction} onOpenChange={() => { setAgencyAction(null); setSelectedAgencyId('') }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              협력업체 선택
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label>견적을 요청할 협력업체를 선택하세요</Label>
+            <Select value={selectedAgencyId} onValueChange={setSelectedAgencyId}>
+              <SelectTrigger>
+                <SelectValue placeholder="협력업체 선택..." />
+              </SelectTrigger>
+              <SelectContent>
+                {agencyUsers.map(agency => (
+                  <SelectItem key={agency.id} value={agency.id}>
+                    {agency.name}{agency.company ? ` (${agency.company})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {agencyUsers.length === 0 && (
+              <p className="text-xs text-destructive">
+                등록된 협력업체가 없습니다. 협력업체가 먼저 회원가입해야 합니다.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAgencyAction(null); setSelectedAgencyId('') }}>취소</Button>
+            <Button
+              className="bg-[#13294B] hover:bg-[#13294B]/90"
+              onClick={handleAgencySubmit}
+              disabled={!selectedAgencyId}
+            >
+              견적 요청 발송
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Building2, Columns3, CircleDollarSign, FileText, GanttChart, Palette, Shield, Building, LogOut } from 'lucide-react'
+import { LayoutDashboard, Building2, Columns3, CircleDollarSign, FileText, GanttChart, Palette, Shield, LogOut } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { ROLES } from '@/lib/constants'
@@ -13,7 +13,6 @@ const NAV_ITEMS = [
   { to: '/gantt', icon: GanttChart, label: 'Gantt Chart', permission: 'page.gantt' },
   { to: '/costs', icon: CircleDollarSign, label: 'Cost Management', permission: 'page.costs' },
   { to: '/brand-assets', icon: Palette, label: 'Brand Assets', permission: 'page.brand_assets' },
-  { to: '/agencies', icon: Building, label: 'Agencies', permission: 'page.agencies' },
   { to: '/users', icon: Shield, label: 'Users', permission: 'page.users' },
 ]
 

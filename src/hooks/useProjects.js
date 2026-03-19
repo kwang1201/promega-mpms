@@ -1,13 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 
+const PROJECT_SELECT = `
+  *,
+  conference:conferences(name),
+  assignee:users!assignee_id(name, email),
+  requester:users!requester_id(name, email),
+  assigned_agency:users!agency_id(name, email, company)
+`
+
 export function useProjects(conferenceId) {
   return useQuery({
     queryKey: ['projects', { conferenceId }],
     queryFn: async () => {
       let query = supabase
         .from('projects')
-        .select('*, conference:conferences(name), agency:agencies(name), assignee:users!assignee_id(name)')
+        .select(PROJECT_SELECT)
         .order('created_at', { ascending: true })
       if (conferenceId) query = query.eq('conference_id', conferenceId)
       const { data, error } = await query
@@ -23,13 +31,29 @@ export function useProject(id) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
-        .select('*, conference:conferences(name), agency:agencies(name), assignee:users!assignee_id(name)')
+        .select(PROJECT_SELECT)
         .eq('id', id)
         .single()
       if (error) throw error
       return data
     },
     enabled: !!id
+  })
+}
+
+// Fetch agency users for assignment
+export function useAgencyUsers() {
+  return useQuery({
+    queryKey: ['agency-users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, name, email, company')
+        .eq('role', 'agency')
+        .order('name')
+      if (error) throw error
+      return data
+    }
   })
 }
 

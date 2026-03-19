@@ -45,11 +45,11 @@ export function AuthProvider({ children }) {
     return { error }
   }
 
-  async function signUp(email, password, name, role = 'owner') {
+  async function signUp(email, password, name, role = 'user', company = '') {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name, role } }
+      options: { data: { name, role, company } }
     })
     return { error }
   }

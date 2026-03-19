@@ -11,7 +11,7 @@ export const CONFERENCE_STATUS = {
 export const PROJECT_STATUS = {
   draft: { label: 'Draft', color: 'bg-[#EBE7E3] text-[#515151]', step: 1 },
   ms_review: { label: 'MS Review', color: 'bg-[#199AC2]/10 text-[#199AC2]', step: 2 },
-  owner_review: { label: 'Owner Review', color: 'bg-[#713A61]/10 text-[#713A61]', step: 3 },
+  owner_review: { label: 'User Review', color: 'bg-[#713A61]/10 text-[#713A61]', step: 3 },
   quotation_request: { label: 'Quotation Request', color: 'bg-[#FDB813]/15 text-[#946d00]', step: 4 },
   quotation_received: { label: 'Quotation Received', color: 'bg-[#FDB813]/25 text-[#946d00]', step: 5 },
   quotation_approved: { label: 'Quotation Approved', color: 'bg-[#199AC2]/15 text-[#13294B]', step: 6 },
@@ -33,26 +33,26 @@ export const AGENCY_VISIBLE_STATUSES = [
 
 export const WORKFLOW_ACTIONS = {
   draft: [
-    { key: 'submit_to_ms', label: 'MS팀에 제출', target: 'ms_review', roles: ['owner', 'ms_staff', 'ms_manager'], variant: 'default' },
+    { key: 'submit_to_ms', label: 'MS팀에 제출', target: 'ms_review', roles: ['user', 'ms_staff', 'ms_manager'], variant: 'default' },
   ],
   ms_review: [
-    { key: 'send_to_owner', label: 'Owner 검토 요청', target: 'owner_review', roles: ['ms_staff', 'ms_manager'], variant: 'default' },
-    { key: 'skip_to_quotation', label: 'Owner 검토 생략 → 견적 요청', target: 'quotation_request', roles: ['ms_staff', 'ms_manager'], variant: 'secondary' },
+    { key: 'send_to_owner', label: 'User 검토 요청', target: 'owner_review', roles: ['ms_staff', 'ms_manager'], variant: 'default' },
+    { key: 'skip_to_quotation', label: 'User 검토 생략 → 견적 요청', target: 'quotation_request', roles: ['ms_staff', 'ms_manager'], variant: 'secondary' },
     { key: 'return_to_draft', label: '초안으로 반려', target: 'draft', roles: ['ms_staff', 'ms_manager'], variant: 'destructive', confirm: true },
   ],
   owner_review: [
-    { key: 'approve_to_quotation', label: '승인 → 견적 요청', target: 'quotation_request', roles: ['owner'], variant: 'default' },
-    { key: 'request_changes', label: '수정 요청', target: 'ms_review', roles: ['owner'], variant: 'destructive', confirm: true },
+    { key: 'approve_to_quotation', label: '승인 → 견적 요청', target: 'quotation_request', roles: ['user'], variant: 'default' },
+    { key: 'request_changes', label: '수정 요청', target: 'ms_review', roles: ['user'], variant: 'destructive', confirm: true },
   ],
   quotation_request: [
     { key: 'submit_quotation', label: '견적서 제출', target: 'quotation_received', roles: ['agency'], variant: 'default', requireFile: 'quotation' },
   ],
   quotation_received: [
-    { key: 'send_for_approval', label: 'Owner 승인 요청', target: 'quotation_approved', roles: ['ms_staff', 'ms_manager'], variant: 'default' },
+    { key: 'send_for_approval', label: 'User 승인 요청', target: 'quotation_approved', roles: ['ms_staff', 'ms_manager'], variant: 'default' },
   ],
   quotation_approved: [
-    { key: 'approve_quotation', label: '견적 승인', target: 'released', roles: ['owner'], variant: 'default' },
-    { key: 'reject_quotation', label: '견적 반려', target: 'quotation_received', roles: ['owner'], variant: 'destructive', confirm: true },
+    { key: 'approve_quotation', label: '견적 승인', target: 'released', roles: ['user'], variant: 'default' },
+    { key: 'reject_quotation', label: '견적 반려', target: 'quotation_received', roles: ['user'], variant: 'destructive', confirm: true },
   ],
   released: [
     { key: 'start_production', label: '제작 시작', target: 'in_production', roles: ['ms_staff', 'ms_manager'], variant: 'default' },
@@ -61,7 +61,7 @@ export const WORKFLOW_ACTIONS = {
     { key: 'submit_invoice', label: '세금계산서 제출', target: 'invoice', roles: ['agency'], variant: 'default', requireFile: 'invoice' },
   ],
   invoice: [
-    { key: 'complete_project', label: '프로젝트 완료', target: 'completed', roles: ['owner', 'ms_manager'], variant: 'default', confirm: true },
+    { key: 'complete_project', label: '프로젝트 완료', target: 'completed', roles: ['user', 'ms_manager'], variant: 'default', confirm: true },
   ],
   completed: [],
 }
@@ -76,7 +76,7 @@ export const TRACK_TYPES = {
 }
 
 export const ROLES = {
-  owner: '학회 Owner',
+  user: 'User',
   ms_staff: 'MS Staff',
   ms_manager: 'MS Manager',
   agency: 'Agency',

@@ -14,7 +14,7 @@ import RequestsPage from '@/pages/RequestsPage'
 import GanttPage from '@/pages/GanttPage'
 import BrandAssetsPage from '@/pages/BrandAssetsPage'
 import UserManagementPage from '@/pages/UserManagementPage'
-import AgencyManagementPage from '@/pages/AgencyManagementPage'
+// AgencyManagementPage removed - agencies managed via Users page
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,7 +49,7 @@ function App() {
               <Route path="/costs" element={<CostManagementPage />} />
               <Route path="/brand-assets" element={<BrandAssetsPage />} />
               <Route path="/users" element={<UserManagementPage />} />
-              <Route path="/agencies" element={<AgencyManagementPage />} />
+              {/* Agencies page removed - managed via Users */}
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

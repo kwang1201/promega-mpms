@@ -15,7 +15,7 @@ import CommentList from '@/components/comments/CommentList'
 import WorkflowProgress from '@/components/workflow/WorkflowProgress'
 import WorkflowActions from '@/components/workflow/WorkflowActions'
 import ActivityLog from '@/components/activity/ActivityLog'
-import { useProject, useUpdateProject } from '@/hooks/useProjects'
+import { useProject, useUpdateProject, useAgencyUsers } from '@/hooks/useProjects'
 import { useFiles, useUploadFile, getSignedUrl } from '@/hooks/useFiles'
 import { useLogActivity } from '@/hooks/useActivityLog'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -40,10 +40,12 @@ export default function ProjectDetailPage() {
   const uploadFile = useUploadFile()
   const logActivity = useLogActivity()
   const { data: brandAssets = [] } = useBrandAssets('all')
+  const { data: agencyUsers = [] } = useAgencyUsers()
   const [dragOver, setDragOver] = useState(false)
   const [showAssetPicker, setShowAssetPicker] = useState(false)
+  const [showAgencySelect, setShowAgencySelect] = useState(false)
 
-  const handleWorkflowAction = useCallback(async ({ targetStatus, actionKey, file, fileCategory }) => {
+  const handleWorkflowAction = useCallback(async ({ targetStatus, actionKey, file, fileCategory, agencyId }) => {
     if (!project || !user) return
 
     // Upload file if provided (for quotation/invoice actions)
@@ -56,8 +58,12 @@ export default function ProjectDetailPage() {
       })
     }
 
-    // Update project status
-    await updateProject.mutateAsync({ id: project.id, status: targetStatus })
+    // Build update payload
+    const updatePayload = { id: project.id, status: targetStatus }
+    if (agencyId) updatePayload.agency_id = agencyId
+
+    // Update project status (and agency if selected)
+    await updateProject.mutateAsync(updatePayload)
 
     // Auto-archive files to Brand Assets when releasing
     if (targetStatus === 'released') {
@@ -84,13 +90,13 @@ export default function ProjectDetailPage() {
     // Notify project members
     const actionLabels = {
       submit_to_ms: 'MS팀에 제출됨',
-      send_to_owner: 'Owner 검토 요청',
+      send_to_owner: 'User 검토 요청',
       skip_to_quotation: '견적 요청 진행',
       return_to_draft: '초안으로 반려됨',
       approve_to_quotation: '승인, 견적 요청 진행',
       request_changes: '수정 요청',
       submit_quotation: '견적서 제출됨',
-      send_for_approval: 'Owner 승인 요청',
+      send_for_approval: 'User 승인 요청',
       approve_quotation: '견적 승인됨',
       reject_quotation: '견적 반려됨',
       start_production: '제작 시작',
@@ -248,16 +254,22 @@ export default function ProjectDetailPage() {
                   {format(new Date(project.deadline), 'yyyy.MM.dd', { locale: ko })}
                 </div>
               )}
+              {project.requester && (
+                <div>
+                  <span className="text-muted-foreground">Requester: </span>
+                  <span className="font-medium">{project.requester.name}</span>
+                </div>
+              )}
               {project.assignee && (
                 <div>
                   <span className="text-muted-foreground">Assignee: </span>
-                  {project.assignee.name}
+                  <span className="font-medium">{project.assignee.name}</span>
                 </div>
               )}
-              {project.agency && (
+              {project.assigned_agency && (
                 <div>
                   <span className="text-muted-foreground">Agency: </span>
-                  {project.agency.name}
+                  <span className="font-medium">{project.assigned_agency.name}{project.assigned_agency.company ? ` (${project.assigned_agency.company})` : ''}</span>
                 </div>
               )}
             </div>

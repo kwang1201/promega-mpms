@@ -106,9 +106,10 @@ export default function RequestsPage() {
                             {req.description && `${req.description.slice(0, 80)}${req.description.length > 80 ? '...' : ''}`}
                           </p>
                           <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
+                            {req.requester && <span>Requester: {req.requester.name}</span>}
                             {req.deadline && <span>Due: {format(new Date(req.deadline), 'yyyy.MM.dd', { locale: ko })}</span>}
                             {req.assignee && <span>Assignee: {req.assignee.name}</span>}
-                            {req.agency && <span>Agency: {req.agency.name}</span>}
+                            {req.assigned_agency && <span>Agency: {req.assigned_agency.name}</span>}
                           </div>
                         </div>
                       </div>

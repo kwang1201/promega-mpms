@@ -24,7 +24,7 @@ export default function ReviewPanel({ projectId }) {
   const createReview = useCreateReview()
   const updateReview = useUpdateReview()
 
-  const canReview = ['owner', 'ms_staff', 'ms_manager'].includes(profile?.role)
+  const canReview = ['user', 'ms_staff', 'ms_manager'].includes(profile?.role)
 
   async function handleCreateReview() {
     await createReview.mutateAsync({

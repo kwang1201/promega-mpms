@@ -34,7 +34,7 @@ export function useUploadFile() {
         .limit(1)
 
       const version = existing?.length > 0 ? existing[0].version + 1 : 1
-      const storagePath = `${conferenceId}/${projectId}/v${version}_${file.name}`
+      const storagePath = `${conferenceId || 'requests'}/${projectId}/v${version}_${file.name}`
 
       // Upload to storage
       const { error: uploadError } = await supabase.storage

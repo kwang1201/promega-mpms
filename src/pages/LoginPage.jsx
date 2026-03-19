@@ -8,10 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const ROLES = [
-  { value: 'owner', label: '학회 Owner' },
+  { value: 'user', label: 'User' },
   { value: 'ms_staff', label: 'MS Staff' },
   { value: 'ms_manager', label: 'MS Manager' },
-  { value: 'agency', label: 'Agency' },
+  { value: 'agency', label: 'Agency (협력업체)' },
   { value: 'scm', label: 'SCM' },
 ]
 
@@ -20,7 +20,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
-  const [role, setRole] = useState('owner')
+  const [role, setRole] = useState('user')
+  const [company, setCompany] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { signIn, signUp } = useAuth()
@@ -32,7 +33,9 @@ export default function LoginPage() {
     setLoading(true)
 
     if (isSignUp) {
-      const { error } = await signUp(email, password, name, role)
+      const metadata = { name, role }
+      if (role === 'agency' && company) metadata.company = company
+      const { error } = await signUp(email, password, name, role, company)
       if (error) setError(error.message)
       else setError('가입 완료! 이메일을 확인해주세요.')
     } else {
@@ -83,6 +86,18 @@ export default function LoginPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                {role === 'agency' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="company">회사명</Label>
+                    <Input
+                      id="company"
+                      value={company}
+                      onChange={e => setCompany(e.target.value)}
+                      placeholder="협력업체 회사명"
+                      required
+                    />
+                  </div>
+                )}
               </>
             )}
             <div className="space-y-2">
