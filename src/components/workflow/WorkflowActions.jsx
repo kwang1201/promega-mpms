@@ -110,18 +110,29 @@ export default function WorkflowActions({ project, profile, files = [], onAction
               확인
             </DialogTitle>
           </DialogHeader>
-          {confirmAction?.hasFiles ? (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                첨부된 파일 {files.length}개가 있습니다. 이대로 진행하시겠습니까?
-              </p>
-              <div className="text-xs text-muted-foreground bg-muted rounded-lg p-2 space-y-1">
-                {files.slice(0, 3).map(f => (
-                  <p key={f.id}>📎 {f.original_name} (v{f.version})</p>
-                ))}
-                {files.length > 3 && <p>...외 {files.length - 3}개</p>}
+          {confirmAction?.hasFiles ? (() => {
+            // Show only latest version per file
+            const grouped = {}
+            files.forEach(f => {
+              if (!grouped[f.original_name] || f.version > grouped[f.original_name].version) {
+                grouped[f.original_name] = f
+              }
+            })
+            const latestFiles = Object.values(grouped)
+            return (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  첨부된 파일 {latestFiles.length}개가 있습니다. 이대로 진행하시겠습니까?
+                </p>
+                <div className="text-xs text-muted-foreground bg-muted rounded-lg p-2 space-y-1">
+                  {latestFiles.slice(0, 5).map(f => (
+                    <p key={f.id}>📎 {f.original_name} (v{f.version})</p>
+                  ))}
+                  {latestFiles.length > 5 && <p>...외 {latestFiles.length - 5}개</p>}
+                </div>
               </div>
-            </div>
+            )
+          })()
           ) : (
             <p className="text-sm text-muted-foreground">
               "{confirmAction?.label}" 을(를) 진행하시겠습니까?
