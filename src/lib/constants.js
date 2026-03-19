@@ -76,6 +76,7 @@ export const TRACK_TYPES = {
 }
 
 export const ROLES = {
+  admin: 'Admin',
   user: 'User',
   ms_staff: 'MS Staff',
   ms_manager: 'MS Manager',

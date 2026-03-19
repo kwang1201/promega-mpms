@@ -22,7 +22,9 @@ export default function WorkflowActions({ project, profile, files = [], onAction
   const { data: agencyUsers = [] } = useAgencyUsers()
 
   const actions = WORKFLOW_ACTIONS[project.status] || []
-  const visibleActions = actions.filter(a => a.roles.includes(profile?.role))
+  const visibleActions = profile?.role === 'admin'
+    ? actions
+    : actions.filter(a => a.roles.includes(profile?.role))
 
   if (visibleActions.length === 0) return null
 

@@ -1,4 +1,5 @@
 // Role-based permission definitions
+// admin: 최고 관리자 - 모든 권한 + admin 역할 부여
 // user: 요청자 - 요청 생성, 콘텐츠 제공, 리뷰
 // ms_staff: MS 담당자 - 전체 관리, 외주 조율, 승인
 // ms_manager: MS 관리자 - 최종 승인, 리포트, 예산, 유저 관리
@@ -6,48 +7,50 @@
 
 const PERMISSIONS = {
   // Conference
-  'conference.create': ['user', 'ms_staff', 'ms_manager'],
-  'conference.edit': ['user', 'ms_staff', 'ms_manager'],
-  'conference.delete': ['ms_manager'],
-  'conference.view': ['user', 'ms_staff', 'ms_manager', 'agency'],
+  'conference.create': ['admin', 'user', 'ms_staff', 'ms_manager'],
+  'conference.edit': ['admin', 'user', 'ms_staff', 'ms_manager'],
+  'conference.delete': ['admin', 'ms_manager'],
+  'conference.view': ['admin', 'user', 'ms_staff', 'ms_manager', 'agency'],
 
   // Project
-  'project.create': ['user', 'ms_staff', 'ms_manager'],
-  'project.edit': ['user', 'ms_staff', 'ms_manager'],
-  'project.delete': ['ms_manager'],
-  'project.status_change': ['ms_staff', 'ms_manager'],
+  'project.create': ['admin', 'user', 'ms_staff', 'ms_manager'],
+  'project.edit': ['admin', 'user', 'ms_staff', 'ms_manager'],
+  'project.delete': ['admin', 'ms_manager'],
+  'project.status_change': ['admin', 'ms_staff', 'ms_manager'],
 
   // Review
-  'review.create': ['user', 'ms_staff', 'ms_manager'],
-  'review.approve': ['user', 'ms_staff', 'ms_manager'],
+  'review.create': ['admin', 'user', 'ms_staff', 'ms_manager'],
+  'review.approve': ['admin', 'user', 'ms_staff', 'ms_manager'],
 
   // File
-  'file.upload': ['user', 'ms_staff', 'ms_manager', 'agency'],
-  'file.delete': ['ms_staff', 'ms_manager'],
+  'file.upload': ['admin', 'user', 'ms_staff', 'ms_manager', 'agency'],
+  'file.delete': ['admin', 'ms_staff', 'ms_manager'],
 
   // Cost
-  'cost.create': ['user', 'ms_staff', 'ms_manager'],
-  'cost.approve': ['ms_staff', 'ms_manager'],
-  'cost.delete': ['ms_manager'],
+  'cost.create': ['admin', 'user', 'ms_staff', 'ms_manager'],
+  'cost.approve': ['admin', 'ms_staff', 'ms_manager'],
+  'cost.delete': ['admin', 'ms_manager'],
 
   // Brand Assets
-  'asset.upload': ['ms_staff', 'ms_manager'],
-  'asset.delete': ['ms_staff', 'ms_manager'],
+  'asset.upload': ['admin', 'ms_staff', 'ms_manager'],
+  'asset.delete': ['admin', 'ms_staff', 'ms_manager'],
 
   // Admin
-  'user.manage': ['ms_manager'],
+  'user.manage': ['admin', 'ms_manager'],
 
   // Pages
-  'page.conferences': ['user', 'ms_staff', 'ms_manager'],
-  'page.requests': ['user', 'ms_staff', 'ms_manager'],
-  'page.kanban': ['user', 'ms_staff', 'ms_manager', 'agency'],
-  'page.gantt': ['user', 'ms_staff', 'ms_manager'],
-  'page.costs': ['ms_staff', 'ms_manager'],
-  'page.brand_assets': ['user', 'ms_staff', 'ms_manager', 'agency'],
-  'page.users': ['ms_manager'],
+  'page.conferences': ['admin', 'user', 'ms_staff', 'ms_manager'],
+  'page.requests': ['admin', 'user', 'ms_staff', 'ms_manager'],
+  'page.kanban': ['admin', 'user', 'ms_staff', 'ms_manager', 'agency'],
+  'page.gantt': ['admin', 'user', 'ms_staff', 'ms_manager'],
+  'page.costs': ['admin', 'ms_staff', 'ms_manager'],
+  'page.brand_assets': ['admin', 'user', 'ms_staff', 'ms_manager', 'agency'],
+  'page.users': ['admin', 'ms_manager'],
 }
 
 export function hasPermission(role, permission) {
+  // Admin has all permissions
+  if (role === 'admin') return true
   const allowed = PERMISSIONS[permission]
   if (!allowed) return false
   return allowed.includes(role)

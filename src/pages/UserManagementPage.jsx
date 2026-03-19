@@ -14,6 +14,7 @@ import EmptyState from '@/components/ui/EmptyState'
 import { useUsers, useUpdateUser, useDeleteUser } from '@/hooks/useUsers'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { AlertTriangle } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 import { ROLES } from '@/lib/constants'
 
 const STATUS_BADGE = {
@@ -23,10 +24,16 @@ const STATUS_BADGE = {
 }
 
 export default function UserManagementPage() {
+  const { profile: currentUser } = useAuth()
   const { data: users = [], isLoading } = useUsers()
   const updateUser = useUpdateUser()
   const deleteUser = useDeleteUser()
   const [deleteTarget, setDeleteTarget] = useState(null)
+
+  // MS Manager can't assign admin role, only Admin can
+  const assignableRoles = currentUser?.role === 'admin'
+    ? ROLES
+    : Object.fromEntries(Object.entries(ROLES).filter(([key]) => key !== 'admin'))
 
   const pendingUsers = users.filter(u => u.status === 'pending')
   const approvedUsers = users.filter(u => u.status !== 'pending')
@@ -165,7 +172,7 @@ export default function UserManagementPage() {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {Object.entries(ROLES).map(([key, label]) => (
+                                {Object.entries(assignableRoles).map(([key, label]) => (
                                   <SelectItem key={key} value={key}>{label}</SelectItem>
                                 ))}
                               </SelectContent>

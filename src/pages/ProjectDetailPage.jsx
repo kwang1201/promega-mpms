@@ -298,7 +298,7 @@ export default function ProjectDetailPage() {
               {project.conference_id ? 'Back to Conference' : 'Back to Requests'}
             </Button>
           </Link>
-          {(profile?.role === 'ms_manager' || profile?.role === 'ms_staff') && (
+          {(['admin', 'ms_manager', 'ms_staff'].includes(profile?.role)) && (
             <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setShowDeleteConfirm(true)}>
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -364,7 +364,7 @@ export default function ProjectDetailPage() {
             </div>
             {/* Expected delivery date input - visible during in_production */}
             {['in_production', 'invoice'].includes(project.status) &&
-              ['agency', 'ms_staff', 'ms_manager'].includes(profile?.role) && (
+              ['admin', 'agency', 'ms_staff', 'ms_manager'].includes(profile?.role) && (
               <div className="mt-3 flex items-center gap-3">
                 <label className="text-sm text-muted-foreground whitespace-nowrap">입고 예정일 수정:</label>
                 <input
@@ -387,7 +387,7 @@ export default function ProjectDetailPage() {
               <p className="mt-3 text-sm text-muted-foreground">{project.description}</p>
             )}
             {/* Emergency status override for ms_manager only */}
-            {profile?.role === 'ms_manager' && (
+            {(profile?.role === 'admin' || profile?.role === 'ms_manager') && (
               <div className="mt-4">
                 <Select
                   value={project.status}
@@ -558,7 +558,7 @@ export default function ProjectDetailPage() {
                                   <Button variant="ghost" size="sm" onClick={() => handleDownload(file)}>
                                     <Download className="h-4 w-4" />
                                   </Button>
-                                  {(profile?.role === 'ms_staff' || profile?.role === 'ms_manager' || file.uploader_id === user?.id) && (
+                                  {(['admin', 'ms_staff', 'ms_manager'].includes(profile?.role) || file.uploader_id === user?.id) && (
                                     <Button
                                       variant="ghost"
                                       size="sm"
