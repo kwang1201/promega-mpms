@@ -71,16 +71,15 @@ export function useUploadFile() {
 export function useDeleteFile() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, storagePath, projectId }) => {
+    mutationFn: async ({ id, storagePath }) => {
       // Delete from storage
       await supabase.storage.from('marketing-files').remove([storagePath])
       // Delete record
       const { error } = await supabase.from('files').delete().eq('id', id)
       if (error) throw error
-      return { projectId }
     },
-    onSuccess: ({ projectId }) => {
-      queryClient.invalidateQueries({ queryKey: ['files', projectId] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['files'] })
     }
   })
 }
