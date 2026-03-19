@@ -132,8 +132,7 @@ export default function WorkflowActions({ project, profile, files = [], onAction
                 </div>
               </div>
             )
-          })()
-          ) : (
+          })() : (
             <p className="text-sm text-muted-foreground">
               "{confirmAction?.label}" 을(를) 진행하시겠습니까?
             </p>
