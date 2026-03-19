@@ -58,7 +58,7 @@ export const WORKFLOW_ACTIONS = {
     { key: 'start_production', label: '제작 시작', target: 'in_production', roles: ['ms_staff', 'ms_manager'], variant: 'default' },
   ],
   in_production: [
-    { key: 'submit_invoice', label: '세금계산서 제출', target: 'invoice', roles: ['agency'], variant: 'default', requireFile: 'invoice' },
+    { key: 'submit_invoice', label: '세금계산서 제출', target: 'invoice', roles: ['agency', 'ms_staff', 'ms_manager'], variant: 'default', requireFile: 'invoice' },
   ],
   invoice: [
     { key: 'complete_project', label: '프로젝트 완료', target: 'completed', roles: ['user', 'ms_manager'], variant: 'default', confirm: true },
