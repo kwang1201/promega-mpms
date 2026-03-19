@@ -463,7 +463,7 @@ export default function ProjectDetailPage() {
                                   <Button variant="ghost" size="sm" onClick={() => handleDownload(file)}>
                                     <Download className="h-4 w-4" />
                                   </Button>
-                                  {(profile?.role === 'ms_staff' || profile?.role === 'ms_manager') && (
+                                  {(profile?.role === 'ms_staff' || profile?.role === 'ms_manager' || file.uploader_id === user?.id) && (
                                     <Button
                                       variant="ghost"
                                       size="sm"
