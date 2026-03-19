@@ -16,7 +16,7 @@ import WorkflowProgress from '@/components/workflow/WorkflowProgress'
 import WorkflowActions from '@/components/workflow/WorkflowActions'
 import ActivityLog from '@/components/activity/ActivityLog'
 import { useProject, useUpdateProject, useDeleteProject, useAgencyUsers } from '@/hooks/useProjects'
-import { useFiles, useUploadFile, getSignedUrl } from '@/hooks/useFiles'
+import { useFiles, useUploadFile, useDeleteFile, getSignedUrl } from '@/hooks/useFiles'
 import { useLogActivity } from '@/hooks/useActivityLog'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { AlertTriangle } from 'lucide-react'
@@ -39,6 +39,7 @@ export default function ProjectDetailPage() {
   const { data: files, isLoading: filesLoading } = useFiles(id)
   const updateProject = useUpdateProject()
   const uploadFile = useUploadFile()
+  const deleteFile = useDeleteFile()
   const logActivity = useLogActivity()
   const { data: brandAssets = [] } = useBrandAssets('all')
   const deleteProject = useDeleteProject()
@@ -359,12 +360,10 @@ export default function ProjectDetailPage() {
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground mb-2">Drag files here or</p>
                   <div className="flex gap-2 justify-center">
-                    <label>
-                      <input type="file" multiple className="hidden" onChange={handleFileSelect} />
-                      <Button variant="outline" size="sm" asChild>
-                        <span>Browse Files</span>
-                      </Button>
-                    </label>
+                    <Button variant="outline" size="sm" onClick={() => document.getElementById('file-input').click()}>
+                      Browse Files
+                    </Button>
+                    <input id="file-input" type="file" multiple className="hidden" onChange={handleFileSelect} />
                     <Button variant="outline" size="sm" onClick={() => setShowAssetPicker(true)}>
                       Import from Brand Assets
                     </Button>
@@ -418,9 +417,21 @@ export default function ProjectDetailPage() {
                             {format(new Date(file.created_at), 'MM.dd HH:mm', { locale: ko })}
                           </TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="sm" onClick={() => handleDownload(file)}>
-                              <Download className="h-4 w-4" />
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="sm" onClick={() => handleDownload(file)}>
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              {(profile?.role === 'ms_staff' || profile?.role === 'ms_manager') && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-destructive hover:text-destructive"
+                                  onClick={() => deleteFile.mutate({ id: file.id, storagePath: file.storage_path, projectId: project.id })}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}

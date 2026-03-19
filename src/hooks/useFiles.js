@@ -68,6 +68,23 @@ export function useUploadFile() {
   })
 }
 
+export function useDeleteFile() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, storagePath, projectId }) => {
+      // Delete from storage
+      await supabase.storage.from('marketing-files').remove([storagePath])
+      // Delete record
+      const { error } = await supabase.from('files').delete().eq('id', id)
+      if (error) throw error
+      return { projectId }
+    },
+    onSuccess: ({ projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ['files', projectId] })
+    }
+  })
+}
+
 export function getFileUrl(storagePath) {
   const { data } = supabase.storage.from('marketing-files').getPublicUrl(storagePath)
   return data.publicUrl
