@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Upload, Download, FileIcon, Files, ClipboardCheck, MessageSquare } from 'lucide-react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Upload, Download, FileIcon, Files, ClipboardCheck, MessageSquare, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { Button } from '@/components/ui/button'
@@ -15,10 +15,11 @@ import CommentList from '@/components/comments/CommentList'
 import WorkflowProgress from '@/components/workflow/WorkflowProgress'
 import WorkflowActions from '@/components/workflow/WorkflowActions'
 import ActivityLog from '@/components/activity/ActivityLog'
-import { useProject, useUpdateProject, useAgencyUsers } from '@/hooks/useProjects'
+import { useProject, useUpdateProject, useDeleteProject, useAgencyUsers } from '@/hooks/useProjects'
 import { useFiles, useUploadFile, getSignedUrl } from '@/hooks/useFiles'
 import { useLogActivity } from '@/hooks/useActivityLog'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { AlertTriangle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { notifyProjectMembers } from '@/lib/notify'
 import { useBrandAssets, getBrandAssetUrl, archiveReleasedFiles } from '@/hooks/useBrandAssets'
@@ -40,10 +41,13 @@ export default function ProjectDetailPage() {
   const uploadFile = useUploadFile()
   const logActivity = useLogActivity()
   const { data: brandAssets = [] } = useBrandAssets('all')
+  const deleteProject = useDeleteProject()
+  const navigate = useNavigate()
   const { data: agencyUsers = [] } = useAgencyUsers()
   const [dragOver, setDragOver] = useState(false)
   const [showAssetPicker, setShowAssetPicker] = useState(false)
   const [showAgencySelect, setShowAgencySelect] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const handleWorkflowAction = useCallback(async ({ targetStatus, actionKey, file, fileCategory, agencyId }) => {
     if (!project || !user) return
@@ -215,12 +219,19 @@ export default function ProjectDetailPage() {
               ]
         }
       >
-        <Link to={project.conference_id ? `/conferences/${project.conference_id}` : '/requests'}>
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            {project.conference_id ? 'Back to Conference' : 'Back to Requests'}
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to={project.conference_id ? `/conferences/${project.conference_id}` : '/requests'}>
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              {project.conference_id ? 'Back to Conference' : 'Back to Requests'}
+            </Button>
+          </Link>
+          {(profile?.role === 'ms_manager' || profile?.role === 'ms_staff') && (
+            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setShowDeleteConfirm(true)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </Header>
       <div className="p-6 space-y-4">
         {/* Workflow Progress Bar */}
@@ -494,6 +505,34 @@ export default function ProjectDetailPage() {
               ))
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              프로젝트 삭제
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            "{project?.title}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>취소</Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                await deleteProject.mutateAsync(project.id)
+                setShowDeleteConfirm(false)
+                navigate(project.conference_id ? `/conferences/${project.conference_id}` : '/requests')
+              }}
+            >
+              삭제
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
