@@ -29,7 +29,7 @@ export default function BrandAssetsPage() {
   const uploadAsset = useUploadBrandAsset()
   const deleteAsset = useDeleteBrandAsset()
 
-  const canManage = ['ms_staff', 'ms_manager'].includes(profile?.role)
+  const canManage = ['admin', 'ms_staff', 'ms_manager'].includes(profile?.role)
 
   const filtered = search
     ? assets.filter(a => a.name.toLowerCase().includes(search.toLowerCase()))
