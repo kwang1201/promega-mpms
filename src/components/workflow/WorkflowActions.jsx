@@ -5,11 +5,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { AlertTriangle, ArrowRight, Upload, Users } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Upload, Users, FileCheck } from 'lucide-react'
 import { WORKFLOW_ACTIONS } from '@/lib/constants'
 import { useAgencyUsers } from '@/hooks/useProjects'
 
-export default function WorkflowActions({ project, profile, onAction }) {
+export default function WorkflowActions({ project, profile, files = [], onAction }) {
   const [confirmAction, setConfirmAction] = useState(null)
   const [fileAction, setFileAction] = useState(null)
   const [selectedFile, setSelectedFile] = useState(null)
@@ -32,7 +32,12 @@ export default function WorkflowActions({ project, profile, onAction }) {
     } else if (action.confirm) {
       setConfirmAction(action)
     } else if (action.requireFile) {
-      setFileAction(action)
+      // If files already uploaded, show confirm dialog instead of file upload
+      if (files.length > 0) {
+        setConfirmAction({ ...action, hasFiles: true })
+      } else {
+        setFileAction(action)
+      }
     } else {
       onAction({ targetStatus: action.target, actionKey: action.key })
     }
@@ -97,17 +102,36 @@ export default function WorkflowActions({ project, profile, onAction }) {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              {confirmAction?.hasFiles ? (
+                <FileCheck className="h-5 w-5 text-[#199AC2]" />
+              ) : (
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+              )}
               확인
             </DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            "{confirmAction?.label}" 을(를) 진행하시겠습니까?
-          </p>
+          {confirmAction?.hasFiles ? (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                첨부된 파일 {files.length}개가 있습니다. 이대로 진행하시겠습니까?
+              </p>
+              <div className="text-xs text-muted-foreground bg-muted rounded-lg p-2 space-y-1">
+                {files.slice(0, 3).map(f => (
+                  <p key={f.id}>📎 {f.original_name} (v{f.version})</p>
+                ))}
+                {files.length > 3 && <p>...외 {files.length - 3}개</p>}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              "{confirmAction?.label}" 을(를) 진행하시겠습니까?
+            </p>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmAction(null)}>취소</Button>
             <Button
-              variant={confirmAction?.variant || 'default'}
+              variant={confirmAction?.hasFiles ? 'default' : (confirmAction?.variant || 'default')}
+              className={confirmAction?.hasFiles ? 'bg-[#13294B] hover:bg-[#13294B]/90' : ''}
               onClick={handleConfirm}
             >
               확인
@@ -158,7 +182,7 @@ export default function WorkflowActions({ project, profile, onAction }) {
         </DialogContent>
       </Dialog>
 
-      {/* File Upload Dialog */}
+      {/* File Upload Dialog (only when no files exist) */}
       <Dialog open={!!fileAction} onOpenChange={() => { setFileAction(null); setSelectedFile(null) }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -168,7 +192,7 @@ export default function WorkflowActions({ project, profile, onAction }) {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Label>파일 첨부 (선택)</Label>
+            <Label>파일 첨부</Label>
             <Input
               type="file"
               onChange={(e) => setSelectedFile(e.target.files[0])}

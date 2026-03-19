@@ -325,6 +325,7 @@ export default function ProjectDetailPage() {
         <WorkflowActions
           project={project}
           profile={profile}
+          files={files || []}
           onAction={handleWorkflowAction}
         />
 
