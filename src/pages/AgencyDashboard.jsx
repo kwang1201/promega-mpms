@@ -13,9 +13,9 @@ export default function AgencyDashboard() {
   const { profile } = useAuth()
   const { data: allProjects, isLoading } = useProjects()
 
-  // Agency sees only projects assigned to their agency AND visible statuses
+  // Agency sees only projects assigned to them AND visible statuses
   const projects = allProjects?.filter(p =>
-    p.agency_id === profile?.agency_id && AGENCY_VISIBLE_STATUSES.includes(p.status)
+    p.agency_id === profile?.id && AGENCY_VISIBLE_STATUSES.includes(p.status)
   ) || []
   const inProgress = projects.filter(p => !['completed'].includes(p.status))
   const completed = projects.filter(p => p.status === 'completed')
