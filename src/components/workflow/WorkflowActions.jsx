@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { AlertTriangle, ArrowRight, Upload, Users, FileCheck } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Upload, Users, FileCheck, CalendarDays } from 'lucide-react'
 import { WORKFLOW_ACTIONS } from '@/lib/constants'
 import { useAgencyUsers } from '@/hooks/useProjects'
 
@@ -15,6 +15,8 @@ export default function WorkflowActions({ project, profile, files = [], onAction
   const [selectedFile, setSelectedFile] = useState(null)
   const [agencyAction, setAgencyAction] = useState(null)
   const [selectedAgencyId, setSelectedAgencyId] = useState('')
+  const [dateAction, setDateAction] = useState(null)
+  const [deliveryDate, setDeliveryDate] = useState('')
   const { data: agencyUsers = [] } = useAgencyUsers()
 
   const actions = WORKFLOW_ACTIONS[project.status] || []
@@ -29,10 +31,12 @@ export default function WorkflowActions({ project, profile, files = [], onAction
   function handleClick(action) {
     if (needsAgencySelect(action)) {
       setAgencyAction(action)
+    } else if (action.requireDate) {
+      setDateAction(action)
+      setDeliveryDate('')
     } else if (action.confirm) {
       setConfirmAction(action)
     } else if (action.requireFile) {
-      // If files already uploaded, show confirm dialog instead of file upload
       if (files.length > 0) {
         setConfirmAction({ ...action, hasFiles: true })
       } else {
@@ -75,6 +79,18 @@ export default function WorkflowActions({ project, profile, files = [], onAction
     }
   }
 
+  function handleDateSubmit() {
+    if (dateAction) {
+      onAction({
+        targetStatus: dateAction.target,
+        actionKey: dateAction.key,
+        deliveryDate: deliveryDate || null,
+      })
+      setDateAction(null)
+      setDeliveryDate('')
+    }
+  }
+
   return (
     <>
       <Card className="border-[#FDB813]/30 bg-[#FDB813]/5">
@@ -111,7 +127,6 @@ export default function WorkflowActions({ project, profile, files = [], onAction
             </DialogTitle>
           </DialogHeader>
           {confirmAction?.hasFiles ? (() => {
-            // Show only latest version per file
             const grouped = {}
             files.forEach(f => {
               if (!grouped[f.original_name] || f.version > grouped[f.original_name].version) {
@@ -145,6 +160,39 @@ export default function WorkflowActions({ project, profile, files = [], onAction
               onClick={handleConfirm}
             >
               확인
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delivery Date Dialog */}
+      <Dialog open={!!dateAction} onOpenChange={() => { setDateAction(null); setDeliveryDate('') }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-[#199AC2]" />
+              제작 시작
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label>입고 요청일 (Delivery Request Date)</Label>
+            <Input
+              type="date"
+              value={deliveryDate}
+              onChange={(e) => setDeliveryDate(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              입고 요청일은 이후 입고 예정일로 사용되며, 수정 가능합니다.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDateAction(null); setDeliveryDate('') }}>취소</Button>
+            <Button
+              className="bg-[#13294B] hover:bg-[#13294B]/90"
+              onClick={handleDateSubmit}
+              disabled={!deliveryDate}
+            >
+              제작 시작
             </Button>
           </DialogFooter>
         </DialogContent>

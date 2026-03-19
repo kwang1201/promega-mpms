@@ -55,7 +55,7 @@ export const WORKFLOW_ACTIONS = {
     { key: 'reject_quotation', label: '견적 반려', target: 'quotation_received', roles: ['user', 'ms_manager'], variant: 'destructive', confirm: true },
   ],
   released: [
-    { key: 'start_production', label: '제작 시작', target: 'in_production', roles: ['ms_staff', 'ms_manager'], variant: 'default' },
+    { key: 'start_production', label: '제작 시작', target: 'in_production', roles: ['ms_staff', 'ms_manager'], variant: 'default', requireDate: true },
   ],
   in_production: [
     { key: 'submit_invoice', label: '세금계산서 제출', target: 'invoice', roles: ['agency', 'ms_staff', 'ms_manager'], variant: 'default', requireFile: 'invoice' },

@@ -53,7 +53,7 @@ export default function ProjectDetailPage() {
   const [revisionFile, setRevisionFile] = useState(null)
   const [expandedVersions, setExpandedVersions] = useState({})
 
-  const handleWorkflowAction = useCallback(async ({ targetStatus, actionKey, file, fileCategory, agencyId }) => {
+  const handleWorkflowAction = useCallback(async ({ targetStatus, actionKey, file, fileCategory, agencyId, deliveryDate }) => {
     if (!project || !user) return
 
     // Upload file if provided (for quotation/invoice actions)
@@ -69,6 +69,7 @@ export default function ProjectDetailPage() {
     // Build update payload
     const updatePayload = { id: project.id, status: targetStatus }
     if (agencyId) updatePayload.agency_id = agencyId
+    if (deliveryDate) updatePayload.expected_delivery_date = deliveryDate
 
     // Update project status (and agency if selected)
     await updateProject.mutateAsync(updatePayload)
@@ -287,7 +288,34 @@ export default function ProjectDetailPage() {
                   <span className="font-medium">{project.assigned_agency.name}{project.assigned_agency.company ? ` (${project.assigned_agency.company})` : ''}</span>
                 </div>
               )}
+              {project.expected_delivery_date && (
+                <div>
+                  <span className="text-muted-foreground">입고 예정일: </span>
+                  <span className="font-medium">{format(new Date(project.expected_delivery_date), 'yyyy.MM.dd', { locale: ko })}</span>
+                </div>
+              )}
             </div>
+            {/* Expected delivery date input - visible during in_production */}
+            {['in_production', 'invoice'].includes(project.status) &&
+              ['agency', 'ms_staff', 'ms_manager'].includes(profile?.role) && (
+              <div className="mt-3 flex items-center gap-3">
+                <label className="text-sm text-muted-foreground whitespace-nowrap">입고 예정일 수정:</label>
+                <input
+                  type="date"
+                  className="text-sm border rounded-md px-2 py-1"
+                  value={project.expected_delivery_date || ''}
+                  onChange={async (e) => {
+                    await updateProject.mutateAsync({ id: project.id, expected_delivery_date: e.target.value || null })
+                    await logActivity.mutateAsync({
+                      projectId: project.id,
+                      userId: user.id,
+                      action: 'delivery_date_set',
+                      details: { date: e.target.value },
+                    })
+                  }}
+                />
+              </div>
+            )}
             {project.description && (
               <p className="mt-3 text-sm text-muted-foreground">{project.description}</p>
             )}
