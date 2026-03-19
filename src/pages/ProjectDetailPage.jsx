@@ -49,6 +49,9 @@ export default function ProjectDetailPage() {
   const [showAssetPicker, setShowAssetPicker] = useState(false)
   const [showAgencySelect, setShowAgencySelect] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showRevisionPicker, setShowRevisionPicker] = useState(false)
+  const [revisionFile, setRevisionFile] = useState(null)
+  const [expandedVersions, setExpandedVersions] = useState({})
 
   const handleWorkflowAction = useCallback(async ({ targetStatus, actionKey, file, fileCategory, agencyId }) => {
     if (!project || !user) return
@@ -359,11 +362,19 @@ export default function ProjectDetailPage() {
                 >
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground mb-2">Drag files here or</p>
-                  <div className="flex gap-2 justify-center">
+                  <div className="flex gap-2 justify-center flex-wrap">
                     <Button variant="outline" size="sm" onClick={() => document.getElementById('file-input').click()}>
-                      Browse Files
+                      New File
                     </Button>
                     <input id="file-input" type="file" multiple className="hidden" onChange={handleFileSelect} />
+                    {files?.length > 0 && (
+                      <Button variant="outline" size="sm" onClick={() => {
+                        setRevisionFile(null)
+                        setShowRevisionPicker(true)
+                      }}>
+                        Upload Revision
+                      </Button>
+                    )}
                     <Button variant="outline" size="sm" onClick={() => setShowAssetPicker(true)}>
                       Import from Brand Assets
                     </Button>
@@ -377,67 +388,99 @@ export default function ProjectDetailPage() {
                   <p className="text-sm text-muted-foreground">Loading files...</p>
                 ) : files?.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">No files uploaded yet</p>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>File Name</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Version</TableHead>
-                        <TableHead>Size</TableHead>
-                        <TableHead>Uploader</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {files?.map(file => (
-                        <TableRow key={file.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              <FileIcon className="h-4 w-4 text-muted-foreground" />
-                              {file.original_name}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-xs capitalize">
-                              {file.file_category || 'general'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">v{file.version}</Badge>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {formatFileSize(file.file_size)}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {file.uploader?.name || '-'}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {format(new Date(file.created_at), 'MM.dd HH:mm', { locale: ko })}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" onClick={() => handleDownload(file)}>
-                                <Download className="h-4 w-4" />
-                              </Button>
-                              {(profile?.role === 'ms_staff' || profile?.role === 'ms_manager') && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-destructive hover:text-destructive"
-                                  onClick={() => deleteFile.mutate({ id: file.id, storagePath: file.storage_path, projectId: project.id })}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
+                ) : (() => {
+                  // Group files by original_name, show latest version by default
+                  const grouped = {}
+                  files.forEach(f => {
+                    const key = f.original_name
+                    if (!grouped[key]) grouped[key] = []
+                    grouped[key].push(f)
+                  })
+                  // Sort each group by version desc
+                  Object.values(grouped).forEach(arr => arr.sort((a, b) => b.version - a.version))
+                  const fileGroups = Object.entries(grouped)
+
+                  return (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>File Name</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Version</TableHead>
+                          <TableHead>Size</TableHead>
+                          <TableHead>Uploader</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead></TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
+                      </TableHeader>
+                      <TableBody>
+                        {fileGroups.map(([origName, versions]) => {
+                          const latest = versions[0]
+                          const hasOlderVersions = versions.length > 1
+                          const isExpanded = expandedVersions[origName]
+                          const displayFiles = isExpanded ? versions : [latest]
+
+                          return displayFiles.map((file, idx) => (
+                            <TableRow key={file.id} className={idx > 0 ? 'bg-muted/30' : ''}>
+                              <TableCell className="font-medium">
+                                <div className="flex items-center gap-2">
+                                  <FileIcon className="h-4 w-4 text-muted-foreground" />
+                                  <span className={idx > 0 ? 'text-muted-foreground text-xs' : ''}>
+                                    {file.original_name}
+                                  </span>
+                                  {idx === 0 && hasOlderVersions && (
+                                    <button
+                                      className="text-xs text-[#199AC2] hover:underline"
+                                      onClick={() => setExpandedVersions(prev => ({ ...prev, [origName]: !prev[origName] }))}
+                                    >
+                                      {isExpanded ? '이전 버전 숨기기' : `+${versions.length - 1} older`}
+                                    </button>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-xs capitalize">
+                                  {file.file_category || 'general'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={idx === 0 ? 'default' : 'outline'} className={idx === 0 ? 'bg-[#199AC2]' : ''}>
+                                  v{file.version}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {formatFileSize(file.file_size)}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {file.uploader?.name || '-'}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {format(new Date(file.created_at), 'MM.dd HH:mm', { locale: ko })}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-1">
+                                  <Button variant="ghost" size="sm" onClick={() => handleDownload(file)}>
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                  {(profile?.role === 'ms_staff' || profile?.role === 'ms_manager') && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-destructive hover:text-destructive"
+                                      onClick={() => deleteFile.mutate({ id: file.id, storagePath: file.storage_path })}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        })}
+                      </TableBody>
+                    </Table>
+                  )
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
@@ -516,6 +559,91 @@ export default function ProjectDetailPage() {
               ))
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Revision Upload Dialog */}
+      <Dialog open={showRevisionPicker} onOpenChange={() => { setShowRevisionPicker(false); setRevisionFile(null) }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>수정본 업로드</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">교체할 기존 파일을 선택하세요:</p>
+              {(() => {
+                // Get unique latest files (exclude quotation/invoice)
+                const grouped = {}
+                files?.forEach(f => {
+                  if (f.file_category === 'quotation' || f.file_category === 'invoice') return
+                  if (!grouped[f.original_name] || f.version > grouped[f.original_name].version) {
+                    grouped[f.original_name] = f
+                  }
+                })
+                const latestFiles = Object.values(grouped)
+                return latestFiles.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">교체 가능한 파일이 없습니다</p>
+                ) : (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {latestFiles.map(f => (
+                      <div
+                        key={f.id}
+                        className={`flex items-center gap-3 p-2 rounded-lg border cursor-pointer transition-colors ${
+                          revisionFile?.targetName === f.original_name
+                            ? 'border-[#199AC2] bg-[#199AC2]/5'
+                            : 'hover:bg-accent/50'
+                        }`}
+                        onClick={() => setRevisionFile(prev => ({ ...prev, targetName: f.original_name }))}
+                      >
+                        <FileIcon className="h-4 w-4 text-muted-foreground" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{f.original_name}</p>
+                          <p className="text-xs text-muted-foreground">v{f.version} • {f.uploader?.name}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
+            </div>
+            {revisionFile?.targetName && (
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">수정본 파일 선택:</p>
+                <input
+                  type="file"
+                  className="text-sm"
+                  onChange={(e) => setRevisionFile(prev => ({ ...prev, file: e.target.files[0] }))}
+                />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowRevisionPicker(false); setRevisionFile(null) }}>취소</Button>
+            <Button
+              className="bg-[#13294B] hover:bg-[#13294B]/90"
+              disabled={!revisionFile?.targetName || !revisionFile?.file}
+              onClick={async () => {
+                if (!revisionFile?.file || !project) return
+                // Upload as revision — use the original file's name so versioning auto-increments
+                const renamedFile = new File([revisionFile.file], revisionFile.targetName, { type: revisionFile.file.type })
+                await uploadFile.mutateAsync({
+                  projectId: project.id,
+                  conferenceId: project.conference_id,
+                  file: renamedFile,
+                })
+                await logActivity.mutateAsync({
+                  projectId: project.id,
+                  userId: user.id,
+                  action: 'file_upload',
+                  details: { filename: revisionFile.targetName, type: 'revision' },
+                })
+                setShowRevisionPicker(false)
+                setRevisionFile(null)
+              }}
+            >
+              수정본 업로드
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
