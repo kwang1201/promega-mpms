@@ -61,7 +61,7 @@ export const WORKFLOW_ACTIONS = {
     { key: 'submit_invoice', label: '세금계산서 제출', target: 'invoice', roles: ['agency', 'ms_staff', 'ms_manager'], variant: 'default', requireFile: 'invoice' },
   ],
   invoice: [
-    { key: 'complete_project', label: '프로젝트 완료', target: 'completed', roles: ['user', 'ms_manager'], variant: 'default', confirm: true },
+    { key: 'complete_project', label: '프로젝트 완료', target: 'completed', roles: ['user', 'ms_manager'], variant: 'default', selectArchiveFiles: true },
   ],
   completed: [],
 }

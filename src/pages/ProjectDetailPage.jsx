@@ -53,7 +53,7 @@ export default function ProjectDetailPage() {
   const [revisionFile, setRevisionFile] = useState(null)
   const [expandedVersions, setExpandedVersions] = useState({})
 
-  const handleWorkflowAction = useCallback(async ({ targetStatus, actionKey, file, fileCategory, agencyId, deliveryDate }) => {
+  const handleWorkflowAction = useCallback(async ({ targetStatus, actionKey, file, fileCategory, agencyId, deliveryDate, archiveFileIds }) => {
     if (!project || !user) return
 
     // Upload file if provided (for quotation/invoice actions)
@@ -74,13 +74,15 @@ export default function ProjectDetailPage() {
     // Update project status (and agency if selected)
     await updateProject.mutateAsync(updatePayload)
 
-    // Auto-archive files to Brand Assets when releasing
-    if (targetStatus === 'released') {
+    // Archive selected files to Brand Assets when completing
+    if (targetStatus === 'completed' && archiveFileIds?.length > 0) {
+      const filesToArchive = files?.filter(f => archiveFileIds.includes(f.id)) || []
       archiveReleasedFiles({
         projectId: project.id,
         projectTitle: project.title,
         trackType: project.track_type,
         userId: user.id,
+        specificFiles: filesToArchive,
       }).catch((err) => console.error('Archive to Brand Assets failed:', err))
     }
 
@@ -332,15 +334,6 @@ export default function ProjectDetailPage() {
                       action: 'status_change',
                       details: { fromStatus: project.status, toStatus: v, note: 'Manual override' },
                     })
-                    // Auto-archive to Brand Assets when manually releasing
-                    if (v === 'released') {
-                      archiveReleasedFiles({
-                        projectId: project.id,
-                        projectTitle: project.title,
-                        trackType: project.track_type,
-                        userId: user.id,
-                      }).catch((err) => console.error('Archive to Brand Assets failed:', err))
-                    }
                   }}
                 >
                   <SelectTrigger className="w-56">

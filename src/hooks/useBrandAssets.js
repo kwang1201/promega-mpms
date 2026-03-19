@@ -70,32 +70,34 @@ export function getBrandAssetUrl(filePath) {
 }
 
 // Archive released project files to brand assets
-export async function archiveReleasedFiles({ projectId, projectTitle, trackType, userId }) {
-  // Get all files from the project
-  const { data: files, error: filesError } = await supabase
-    .from('files')
-    .select('*')
-    .eq('project_id', projectId)
+export async function archiveReleasedFiles({ projectId, projectTitle, trackType, userId, specificFiles }) {
+  let filesToArchive = specificFiles
 
-  console.log('[Archive] Starting archive for project:', projectId, 'files found:', files?.length)
-  if (filesError) { console.error('[Archive] Files fetch error:', filesError); return }
-  if (!files?.length) { console.log('[Archive] No files to archive'); return }
+  if (!filesToArchive) {
+    const { data: files, error: filesError } = await supabase
+      .from('files')
+      .select('*')
+      .eq('project_id', projectId)
 
-  // Only archive latest version of each file (exclude quotation/invoice by category or filename)
-  const skipKeywords = ['견적', 'quotation', 'invoice', '세금계산서', '계산서']
-  const grouped = {}
-  files.forEach(f => {
-    if (f.file_category === 'quotation' || f.file_category === 'invoice') return
-    const nameLower = (f.original_name || '').toLowerCase()
-    if (skipKeywords.some(kw => nameLower.includes(kw))) return
-    if (!grouped[f.original_name] || f.version > grouped[f.original_name].version) {
-      grouped[f.original_name] = f
-    }
-  })
-  const latestFiles = Object.values(grouped)
-  console.log('[Archive] Latest files to archive:', latestFiles.length)
+    if (filesError) { console.error('[Archive] Files fetch error:', filesError); return }
+    if (!files?.length) { console.log('[Archive] No files to archive'); return }
 
-  for (const file of latestFiles) {
+    const skipKeywords = ['견적', 'quotation', 'invoice', '세금계산서', '계산서']
+    const grouped = {}
+    files.forEach(f => {
+      if (f.file_category === 'quotation' || f.file_category === 'invoice') return
+      const nameLower = (f.original_name || '').toLowerCase()
+      if (skipKeywords.some(kw => nameLower.includes(kw))) return
+      if (!grouped[f.original_name] || f.version > grouped[f.original_name].version) {
+        grouped[f.original_name] = f
+      }
+    })
+    filesToArchive = Object.values(grouped)
+  }
+
+  console.log('[Archive] Files to archive:', filesToArchive.length)
+
+  for (const file of filesToArchive) {
     console.log('[Archive] Downloading:', file.storage_path)
     const { data: fileData, error: downloadError } = await supabase.storage
       .from('marketing-files')

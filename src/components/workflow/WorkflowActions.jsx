@@ -17,6 +17,8 @@ export default function WorkflowActions({ project, profile, files = [], onAction
   const [selectedAgencyId, setSelectedAgencyId] = useState('')
   const [dateAction, setDateAction] = useState(null)
   const [deliveryDate, setDeliveryDate] = useState('')
+  const [archiveAction, setArchiveAction] = useState(null)
+  const [archiveSelectedIds, setArchiveSelectedIds] = useState([])
   const { data: agencyUsers = [] } = useAgencyUsers()
 
   const actions = WORKFLOW_ACTIONS[project.status] || []
@@ -31,6 +33,21 @@ export default function WorkflowActions({ project, profile, files = [], onAction
   function handleClick(action) {
     if (needsAgencySelect(action)) {
       setAgencyAction(action)
+    } else if (action.selectArchiveFiles) {
+      // Get latest versions, pre-filter out quotation/invoice
+      const skipKeywords = ['견적', 'quotation', 'invoice', '세금계산서', '계산서']
+      const grouped = {}
+      files.forEach(f => {
+        if (f.file_category === 'quotation' || f.file_category === 'invoice') return
+        const nameLower = (f.original_name || '').toLowerCase()
+        if (skipKeywords.some(kw => nameLower.includes(kw))) return
+        if (!grouped[f.original_name] || f.version > grouped[f.original_name].version) {
+          grouped[f.original_name] = f
+        }
+      })
+      const latestFiles = Object.values(grouped)
+      setArchiveAction(action)
+      setArchiveSelectedIds(latestFiles.map(f => f.id))
     } else if (action.requireDate) {
       setDateAction(action)
       setDeliveryDate('')
@@ -235,6 +252,68 @@ export default function WorkflowActions({ project, profile, files = [], onAction
               disabled={!selectedAgencyId}
             >
               견적 요청 발송
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Archive File Selection Dialog */}
+      <Dialog open={!!archiveAction} onOpenChange={() => { setArchiveAction(null); setArchiveSelectedIds([]) }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileCheck className="h-5 w-5 text-[#199AC2]" />
+              프로젝트 완료 - Brand Assets 저장
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Brand Assets에 저장할 파일을 선택하세요:
+            </p>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {(() => {
+                const grouped = {}
+                files.forEach(f => {
+                  if (!grouped[f.original_name] || f.version > grouped[f.original_name].version) {
+                    grouped[f.original_name] = f
+                  }
+                })
+                return Object.values(grouped).map(f => (
+                  <label key={f.id} className="flex items-center gap-3 p-2 rounded-lg border hover:bg-accent/50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={archiveSelectedIds.includes(f.id)}
+                      onChange={(e) => {
+                        setArchiveSelectedIds(prev =>
+                          e.target.checked ? [...prev, f.id] : prev.filter(id => id !== f.id)
+                        )
+                      }}
+                      className="h-4 w-4"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{f.original_name}</p>
+                      <p className="text-xs text-muted-foreground">v{f.version} • {f.uploader?.name}</p>
+                    </div>
+                  </label>
+                ))
+              })()}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setArchiveAction(null); setArchiveSelectedIds([]) }}>취소</Button>
+            <Button
+              className="bg-[#13294B] hover:bg-[#13294B]/90"
+              onClick={() => {
+                onAction({
+                  targetStatus: archiveAction.target,
+                  actionKey: archiveAction.key,
+                  archiveFileIds: archiveSelectedIds,
+                })
+                setArchiveAction(null)
+                setArchiveSelectedIds([])
+              }}
+            >
+              완료 ({archiveSelectedIds.length}개 저장)
             </Button>
           </DialogFooter>
         </DialogContent>
