@@ -418,7 +418,7 @@ export default function ProjectDetailPage() {
                           const latest = versions[0]
                           const hasOlderVersions = versions.length > 1
                           const isExpanded = expandedVersions[origName]
-                          const displayFiles = isExpanded ? versions : [latest]
+                          const displayFiles = (isExpanded && profile?.role !== 'agency') ? versions : [latest]
 
                           return displayFiles.map((file, idx) => (
                             <TableRow key={file.id} className={idx > 0 ? 'bg-muted/30' : ''}>
@@ -428,7 +428,7 @@ export default function ProjectDetailPage() {
                                   <span className={idx > 0 ? 'text-muted-foreground text-xs' : ''}>
                                     {file.original_name}
                                   </span>
-                                  {idx === 0 && hasOlderVersions && (
+                                  {idx === 0 && hasOlderVersions && profile?.role !== 'agency' && (
                                     <button
                                       className="text-xs text-[#199AC2] hover:underline"
                                       onClick={() => setExpandedVersions(prev => ({ ...prev, [origName]: !prev[origName] }))}
@@ -504,12 +504,14 @@ export default function ProjectDetailPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Activity Log - Always visible at bottom */}
-        <Card>
-          <CardContent className="pt-6">
-            <ActivityLog projectId={id} />
-          </CardContent>
-        </Card>
+        {/* Activity Log - hidden for agency */}
+        {profile?.role !== 'agency' && (
+          <Card>
+            <CardContent className="pt-6">
+              <ActivityLog projectId={id} />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Brand Assets Picker Dialog */}
