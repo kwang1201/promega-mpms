@@ -77,7 +77,9 @@ export async function archiveReleasedFiles({ projectId, projectTitle, trackType,
     .select('*')
     .eq('project_id', projectId)
 
-  if (filesError || !files?.length) return
+  console.log('[Archive] Starting archive for project:', projectId, 'files found:', files?.length)
+  if (filesError) { console.error('[Archive] Files fetch error:', filesError); return }
+  if (!files?.length) { console.log('[Archive] No files to archive'); return }
 
   // Only archive latest version of each file (exclude quotation/invoice)
   const grouped = {}
@@ -88,25 +90,27 @@ export async function archiveReleasedFiles({ projectId, projectTitle, trackType,
     }
   })
   const latestFiles = Object.values(grouped)
+  console.log('[Archive] Latest files to archive:', latestFiles.length)
 
   for (const file of latestFiles) {
-    // Download from marketing-files bucket
+    console.log('[Archive] Downloading:', file.storage_path)
     const { data: fileData, error: downloadError } = await supabase.storage
       .from('marketing-files')
       .download(file.storage_path)
 
-    if (downloadError || !fileData) continue
+    if (downloadError) { console.error('[Archive] Download error:', downloadError); continue }
+    if (!fileData) { console.error('[Archive] No file data for:', file.storage_path); continue }
 
-    // Upload to brand-assets bucket
-    const storagePath = `released/${trackType}/${Date.now()}_${file.original_name}`
+    const safeName = file.original_name.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const storagePath = `released/${trackType}/${Date.now()}_${safeName}`
+    console.log('[Archive] Uploading to:', storagePath)
     const { error: uploadError } = await supabase.storage
       .from('brand-assets')
       .upload(storagePath, fileData)
 
-    if (uploadError) continue
+    if (uploadError) { console.error('[Archive] Upload error:', uploadError); continue }
 
-    // Create brand_assets record
-    await supabase.from('brand_assets').insert({
+    const { error: insertError } = await supabase.from('brand_assets').insert({
       name: `[${projectTitle}] ${file.original_name}`,
       category: 'released',
       description: `Released from project: ${projectTitle} (${trackType})`,
@@ -115,5 +119,7 @@ export async function archiveReleasedFiles({ projectId, projectTitle, trackType,
       mime_type: file.mime_type,
       uploaded_by: userId,
     })
+    if (insertError) { console.error('[Archive] DB insert error:', insertError); continue }
+    console.log('[Archive] Successfully archived:', file.original_name)
   }
 }
