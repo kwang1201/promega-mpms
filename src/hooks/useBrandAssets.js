@@ -81,10 +81,13 @@ export async function archiveReleasedFiles({ projectId, projectTitle, trackType,
   if (filesError) { console.error('[Archive] Files fetch error:', filesError); return }
   if (!files?.length) { console.log('[Archive] No files to archive'); return }
 
-  // Only archive latest version of each file (exclude quotation/invoice)
+  // Only archive latest version of each file (exclude quotation/invoice by category or filename)
+  const skipKeywords = ['견적', 'quotation', 'invoice', '세금계산서', '계산서']
   const grouped = {}
   files.forEach(f => {
     if (f.file_category === 'quotation' || f.file_category === 'invoice') return
+    const nameLower = (f.original_name || '').toLowerCase()
+    if (skipKeywords.some(kw => nameLower.includes(kw))) return
     if (!grouped[f.original_name] || f.version > grouped[f.original_name].version) {
       grouped[f.original_name] = f
     }
