@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Upload, Download, FileIcon, Files, ClipboardCheck, MessageSquare, Trash2 } from 'lucide-react'
+import { ArrowLeft, Upload, Download, FileIcon, Files, ClipboardCheck, MessageSquare, Trash2, Search, Image } from 'lucide-react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { Button } from '@/components/ui/button'
@@ -30,6 +30,71 @@ function formatFileSize(bytes) {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function AssetPickerThumbnail({ asset }) {
+  const [url, setUrl] = useState(null)
+  const isImage = asset.mime_type?.startsWith('image/')
+  useEffect(() => {
+    if (isImage) getBrandAssetUrl(asset.file_path).then(({ data }) => { if (data?.signedUrl) setUrl(data.signedUrl) })
+  }, [asset.file_path, isImage])
+  if (isImage && url) return <img src={url} alt="" className="w-12 h-12 rounded object-cover" />
+  return <div className="w-12 h-12 rounded bg-[#F1F1F1] flex items-center justify-center"><FileIcon className="h-5 w-5 text-[#515151]" /></div>
+}
+
+function AssetPickerContent({ brandAssets, onSelect }) {
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('all')
+  const categories = useMemo(() => {
+    const cats = new Set(brandAssets.map(a => a.category))
+    return ['all', ...cats]
+  }, [brandAssets])
+  const filtered = useMemo(() => {
+    return brandAssets.filter(a => {
+      if (category !== 'all' && a.category !== category) return false
+      if (search && !a.name.toLowerCase().includes(search.toLowerCase())) return false
+      return true
+    })
+  }, [brandAssets, search, category])
+
+  return (
+    <div className="flex flex-col gap-3 overflow-hidden">
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            className="w-full pl-8 pr-3 py-1.5 text-sm border rounded-md"
+            placeholder="Search assets..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <select className="text-sm border rounded-md px-2" value={category} onChange={e => setCategory(e.target.value)}>
+          {categories.map(c => <option key={c} value={c}>{c === 'all' ? 'All' : c}</option>)}
+        </select>
+      </div>
+      <div className="overflow-y-auto max-h-[50vh] space-y-2">
+        {filtered.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">No matching assets</p>
+        ) : filtered.map(asset => (
+          <div
+            key={asset.id}
+            className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 cursor-pointer"
+            onClick={() => onSelect(asset)}
+          >
+            <AssetPickerThumbnail asset={asset} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{asset.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {asset.category} • {formatFileSize(asset.file_size)} • {asset.uploader?.name}
+              </p>
+            </div>
+            <Badge variant="outline" className="text-xs capitalize shrink-0">{asset.category}</Badge>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function ProjectDetailPage() {
@@ -547,51 +612,34 @@ export default function ProjectDetailPage() {
 
       {/* Brand Assets Picker Dialog */}
       <Dialog open={showAssetPicker} onOpenChange={setShowAssetPicker}>
-        <DialogContent className="max-w-lg max-h-[70vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Import from Brand Assets</DialogTitle>
           </DialogHeader>
-          <div className="space-y-2">
-            {brandAssets.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No brand assets available</p>
-            ) : (
-              brandAssets.map(asset => (
-                <div
-                  key={asset.id}
-                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 cursor-pointer"
-                  onClick={async () => {
-                    const { data } = await getBrandAssetUrl(asset.file_path)
-                    if (data?.signedUrl) {
-                      const res = await fetch(data.signedUrl)
-                      const blob = await res.blob()
-                      const fileName = asset.name.replace(/[[\]]/g, '').split(' ').pop() || asset.name
-                      const file = new File([blob], fileName, { type: asset.mime_type })
-                      await uploadFile.mutateAsync({
-                        projectId: project.id,
-                        conferenceId: project.conference_id,
-                        file,
-                      })
-                      await logActivity.mutateAsync({
-                        projectId: project.id,
-                        userId: user.id,
-                        action: 'file_upload',
-                        details: { filename: asset.name, source: 'brand_assets' },
-                      })
-                      setShowAssetPicker(false)
-                    }
-                  }}
-                >
-                  <div>
-                    <p className="text-sm font-medium">{asset.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {asset.category} • {formatFileSize(asset.file_size)}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="text-xs capitalize">{asset.category}</Badge>
-                </div>
-              ))
-            )}
-          </div>
+          <AssetPickerContent
+            brandAssets={brandAssets}
+            onSelect={async (asset) => {
+              const { data } = await getBrandAssetUrl(asset.file_path)
+              if (data?.signedUrl) {
+                const res = await fetch(data.signedUrl)
+                const blob = await res.blob()
+                const fileName = asset.name.replace(/[[\]]/g, '').split(' ').pop() || asset.name
+                const file = new File([blob], fileName, { type: asset.mime_type })
+                await uploadFile.mutateAsync({
+                  projectId: project.id,
+                  conferenceId: project.conference_id,
+                  file,
+                })
+                await logActivity.mutateAsync({
+                  projectId: project.id,
+                  userId: user.id,
+                  action: 'file_upload',
+                  details: { filename: asset.name, source: 'brand_assets' },
+                })
+                setShowAssetPicker(false)
+              }
+            }}
+          />
         </DialogContent>
       </Dialog>
 
