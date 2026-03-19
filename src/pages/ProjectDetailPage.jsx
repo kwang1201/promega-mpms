@@ -332,6 +332,15 @@ export default function ProjectDetailPage() {
                       action: 'status_change',
                       details: { fromStatus: project.status, toStatus: v, note: 'Manual override' },
                     })
+                    // Auto-archive to Brand Assets when manually releasing
+                    if (v === 'released') {
+                      archiveReleasedFiles({
+                        projectId: project.id,
+                        projectTitle: project.title,
+                        trackType: project.track_type,
+                        userId: user.id,
+                      }).catch((err) => console.error('Archive to Brand Assets failed:', err))
+                    }
                   }}
                 >
                   <SelectTrigger className="w-56">
