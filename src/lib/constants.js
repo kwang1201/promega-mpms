@@ -70,7 +70,7 @@ export const TRACK_TYPES = {
   booth: { label: 'Booth/Wall', icon: '🏗️' },
   banner: { label: 'Banner', icon: '🖼️' },
   giveaway: { label: 'Giveaway', icon: '🎁' },
-  poster: { label: 'SCM Poster', icon: '📄' },
+  poster: { label: 'Poster', icon: '📄' },
   survey: { label: 'Survey/Tent', icon: '📋' },
   print: { label: 'Literature', icon: '📑' },
 }
@@ -80,5 +80,4 @@ export const ROLES = {
   ms_staff: 'MS Staff',
   ms_manager: 'MS Manager',
   agency: 'Agency',
-  scm: 'SCM',
 }

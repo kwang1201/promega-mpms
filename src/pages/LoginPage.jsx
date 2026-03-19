@@ -12,7 +12,6 @@ const ROLES = [
   { value: 'ms_staff', label: 'MS Staff' },
   { value: 'ms_manager', label: 'MS Manager' },
   { value: 'agency', label: 'Agency (협력업체)' },
-  { value: 'scm', label: 'SCM' },
 ]
 
 export default function LoginPage() {
