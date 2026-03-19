@@ -81,7 +81,7 @@ export default function ProjectDetailPage() {
         projectTitle: project.title,
         trackType: project.track_type,
         userId: user.id,
-      }).catch(() => {}) // Don't block workflow on archive failure
+      }).catch((err) => console.error('Archive to Brand Assets failed:', err))
     }
 
     // Log activity

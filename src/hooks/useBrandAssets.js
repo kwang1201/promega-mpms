@@ -79,7 +79,17 @@ export async function archiveReleasedFiles({ projectId, projectTitle, trackType,
 
   if (filesError || !files?.length) return
 
-  for (const file of files) {
+  // Only archive latest version of each file (exclude quotation/invoice)
+  const grouped = {}
+  files.forEach(f => {
+    if (f.file_category === 'quotation' || f.file_category === 'invoice') return
+    if (!grouped[f.original_name] || f.version > grouped[f.original_name].version) {
+      grouped[f.original_name] = f
+    }
+  })
+  const latestFiles = Object.values(grouped)
+
+  for (const file of latestFiles) {
     // Download from marketing-files bucket
     const { data: fileData, error: downloadError } = await supabase.storage
       .from('marketing-files')
