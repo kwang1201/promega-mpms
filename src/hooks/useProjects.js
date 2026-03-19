@@ -1,13 +1,33 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 
-const PROJECT_SELECT = `
-  *,
-  conference:conferences(name),
-  assignee:users!assignee_id(name, email),
-  requester:users!requester_id(name, email),
-  assigned_agency:users!agency_id(name, email, company)
-`
+const PROJECT_SELECT = '*, conference:conferences(name), assignee:users!assignee_id(name, email)'
+
+// Helper to enrich projects with requester and agency info
+async function enrichProjects(projects) {
+  if (!projects || projects.length === 0) return projects
+
+  // Collect unique requester_id and agency_id values
+  const requesterIds = [...new Set(projects.map(p => p.requester_id).filter(Boolean))]
+  const agencyIds = [...new Set(projects.map(p => p.agency_id).filter(Boolean))]
+  const allIds = [...new Set([...requesterIds, ...agencyIds])]
+
+  if (allIds.length === 0) return projects
+
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, name, email, company')
+    .in('id', allIds)
+
+  const userMap = {}
+  users?.forEach(u => { userMap[u.id] = u })
+
+  return projects.map(p => ({
+    ...p,
+    requester: p.requester_id ? userMap[p.requester_id] || null : null,
+    assigned_agency: p.agency_id ? userMap[p.agency_id] || null : null,
+  }))
+}
 
 export function useProjects(conferenceId) {
   return useQuery({
@@ -20,7 +40,7 @@ export function useProjects(conferenceId) {
       if (conferenceId) query = query.eq('conference_id', conferenceId)
       const { data, error } = await query
       if (error) throw error
-      return data
+      return enrichProjects(data)
     }
   })
 }
@@ -35,7 +55,8 @@ export function useProject(id) {
         .eq('id', id)
         .single()
       if (error) throw error
-      return data
+      const [enriched] = await enrichProjects([data])
+      return enriched
     },
     enabled: !!id
   })
