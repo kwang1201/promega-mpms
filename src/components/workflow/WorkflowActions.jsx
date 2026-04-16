@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AlertTriangle, ArrowRight, Upload, Users, FileCheck, CalendarDays } from 'lucide-react'
-import { WORKFLOW_ACTIONS } from '@/lib/constants'
+import { getWorkflowActions } from '@/lib/constants'
 import { useAgencyUsers } from '@/hooks/useProjects'
 
 export default function WorkflowActions({ project, profile, files = [], onAction }) {
@@ -21,7 +21,7 @@ export default function WorkflowActions({ project, profile, files = [], onAction
   const [archiveSelectedIds, setArchiveSelectedIds] = useState([])
   const { data: agencyUsers = [] } = useAgencyUsers()
 
-  const actions = WORKFLOW_ACTIONS[project.status] || []
+  const actions = getWorkflowActions(project)
   const visibleActions = profile?.role === 'admin'
     ? actions
     : actions.filter(a => a.roles.includes(profile?.role))

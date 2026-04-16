@@ -7,18 +7,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuth } from '@/contexts/AuthContext'
 import { TRACK_TYPES } from '@/lib/constants'
+import TypeSpecificFields from './TypeSpecificFields'
 
 export default function RequestForm({ open, onOpenChange, onSubmit }) {
   const { user } = useAuth()
   const [form, setForm] = useState({
-    track_type: 'print',
+    track_type: 'brochure',
     title: '',
     deadline: '',
     description: '',
   })
+  const [typeMetadata, setTypeMetadata] = useState({})
 
   function handleChange(field, value) {
     setForm(prev => ({ ...prev, [field]: value }))
+    if (field === 'track_type') setTypeMetadata({})
   }
 
   async function handleSubmit(e) {
@@ -28,14 +31,16 @@ export default function RequestForm({ open, onOpenChange, onSubmit }) {
       conference_id: null,
       request_type: 'independent',
       requester_id: user.id,
+      type_metadata: typeMetadata,
     })
     onOpenChange(false)
-    setForm({ track_type: 'print', title: '', deadline: '', description: '' })
+    setForm({ track_type: 'brochure', title: '', deadline: '', description: '' })
+    setTypeMetadata({})
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>New Request</DialogTitle>
         </DialogHeader>
@@ -63,8 +68,16 @@ export default function RequestForm({ open, onOpenChange, onSubmit }) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="req-desc">Description</Label>
-            <Textarea id="req-desc" value={form.description} onChange={e => handleChange('description', e.target.value)} rows={3} placeholder="Describe what you need..." />
+            <Textarea id="req-desc" value={form.description} onChange={e => handleChange('description', e.target.value)} rows={2} placeholder="Describe what you need..." />
           </div>
+
+          {/* Type-specific fields */}
+          <TypeSpecificFields
+            trackType={form.track_type}
+            metadata={typeMetadata}
+            onChange={setTypeMetadata}
+          />
+
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" className="bg-[#13294B] hover:bg-[#13294B]/90">Submit Request</Button>

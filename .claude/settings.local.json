@@ -19,7 +19,10 @@
       "Bash(npx shadcn@latest add skeleton sonner breadcrumb tooltip alert-dialog --overwrite)",
       "Bash(npm run:*)",
       "Bash(find '/c/Marketing process management system/src' -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx \\\\\\))",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(node docs/generate-manual.js)",
+      "Bash(mv \"/c/Marketing process management system/docs/generate-manual.js\" \"/c/Marketing process management system/docs/generate-manual.cjs\")",
+      "Bash(node docs/generate-manual.cjs)"
     ]
   }
 }
