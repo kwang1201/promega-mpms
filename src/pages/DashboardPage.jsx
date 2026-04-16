@@ -12,6 +12,7 @@ import Header from '@/components/layout/Header'
 import BudgetChart from '@/components/dashboard/BudgetChart'
 import TrackProgress from '@/components/dashboard/TrackProgress'
 import AgencyStats from '@/components/dashboard/AgencyStats'
+import WorkerPerformance from '@/components/dashboard/WorkerPerformance'
 import { format, isPast, addDays, isAfter } from 'date-fns'
 import { ko } from 'date-fns/locale'
 
@@ -152,6 +153,11 @@ export default function DashboardPage() {
 
             {/* Agency Stats */}
             <AgencyStats projects={projects} />
+
+            {/* Worker Performance — Admin/MS Manager only */}
+            {['admin', 'ms_manager'].includes(profile?.role) && (
+              <WorkerPerformance />
+            )}
 
             {/* Active Conferences */}
             <Card>

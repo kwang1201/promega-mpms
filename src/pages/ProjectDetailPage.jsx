@@ -424,6 +424,21 @@ export default function ProjectDetailPage() {
           onAction={handleWorkflowAction}
         />
 
+        {/* Design Review Panel — shown prominently during design_review or in_production */}
+        {['design_review', 'in_production'].includes(project.status) && (
+          <Card className="border-[#713A61]/30 bg-[#713A61]/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <ClipboardCheck className="h-5 w-5 text-[#713A61]" />
+                Design Review
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ReviewPanel projectId={id} reviewPhase="design_review" />
+            </CardContent>
+          </Card>
+        )}
+
         {/* Tabs: Files / Reviews / Comments */}
         <Tabs defaultValue="files">
           <TabsList>
@@ -433,11 +448,7 @@ export default function ProjectDetailPage() {
             </TabsTrigger>
             <TabsTrigger value="reviews" className="gap-1.5">
               <ClipboardCheck className="h-4 w-4" />
-              Reviews
-            </TabsTrigger>
-            <TabsTrigger value="comments" className="gap-1.5">
-              <MessageSquare className="h-4 w-4" />
-              Comments
+              MS Reviews
             </TabsTrigger>
           </TabsList>
 
@@ -581,24 +592,29 @@ export default function ProjectDetailPage() {
             </Card>
           </TabsContent>
 
-          {/* Reviews Tab */}
+          {/* MS Reviews Tab */}
           <TabsContent value="reviews">
             <Card>
               <CardContent className="pt-6">
-                <ReviewPanel projectId={id} />
+                <ReviewPanel projectId={id} reviewPhase="ms_review" />
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Comments Tab */}
-          <TabsContent value="comments">
-            <Card>
-              <CardContent className="pt-6">
-                <CommentList projectId={id} />
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
+
+        {/* Comments — always visible */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-muted-foreground" />
+              Comments
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CommentList projectId={id} />
+          </CardContent>
+        </Card>
 
         {/* Activity Log - hidden for agency */}
         {profile?.role !== 'agency' && (

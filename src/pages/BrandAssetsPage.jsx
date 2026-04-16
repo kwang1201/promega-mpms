@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Header from '@/components/layout/Header'
 import AssetGrid from '@/components/assets/AssetGrid'
 import AssetUploadForm from '@/components/assets/AssetUploadForm'
@@ -18,6 +19,13 @@ const CATEGORIES = [
   { value: 'guideline', label: 'Guideline' },
   { value: 'released', label: 'Released Files' },
   { value: 'other', label: 'Other' },
+]
+
+const DAM_LINKS = [
+  { label: 'Brand Guidelines', description: 'Promega brand standards, logo usage, and style guides', url: 'https://promega.widencollective.com/portals/brand-guidelines' },
+  { label: 'Promega Imagery', description: 'Product photos, lifestyle images, and illustrations', url: 'https://promega.widencollective.com/portals/promega-imagery' },
+  { label: 'Goodsell Imagery', description: 'David Goodsell scientific illustrations', url: 'https://promega.widencollective.com/portals/goodsell-imagery' },
+  { label: 'Templates', description: 'PowerPoint, Word, and print templates', url: 'https://promega.widencollective.com/portals/templates' },
 ]
 
 export default function BrandAssetsPage() {
@@ -55,7 +63,36 @@ export default function BrandAssetsPage() {
           </Button>
         )}
       </Header>
-      <div className="p-6 space-y-4">
+      <div className="p-6 space-y-6">
+        {/* DAM Portal Links */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ExternalLink className="h-4 w-4" />
+              Promega DAM (Widen Collective)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {DAM_LINKS.map(link => (
+                <a
+                  key={link.label}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col gap-1 p-3 rounded-lg border hover:bg-accent/50 transition-colors group"
+                >
+                  <span className="text-sm font-medium group-hover:text-[#199AC2] flex items-center gap-1">
+                    {link.label}
+                    <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </span>
+                  <span className="text-xs text-muted-foreground">{link.description}</span>
+                </a>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Search */}
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

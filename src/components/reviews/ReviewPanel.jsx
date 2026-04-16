@@ -18,19 +18,24 @@ const REVIEW_STATUS = {
   conditional: { label: 'Conditional', color: 'bg-[#FDB813]/15 text-[#946d00]' },
 }
 
-export default function ReviewPanel({ projectId }) {
+export default function ReviewPanel({ projectId, reviewPhase = 'ms_review' }) {
   const { user, profile } = useAuth()
-  const { data: reviews = [], isLoading } = useReviews(projectId)
+  const { data: reviews = [], isLoading } = useReviews(projectId, reviewPhase)
   const createReview = useCreateReview()
   const updateReview = useUpdateReview()
 
-  const canReview = ['user', 'ms_staff', 'ms_manager'].includes(profile?.role)
+  const canReview = reviewPhase === 'design_review'
+    ? ['user', 'ms_staff', 'ms_manager'].includes(profile?.role)
+    : ['user', 'ms_staff', 'ms_manager'].includes(profile?.role)
+
+  const phaseLabel = reviewPhase === 'design_review' ? 'Design Review' : 'Review'
 
   async function handleCreateReview() {
     await createReview.mutateAsync({
       project_id: projectId,
       reviewer_id: user.id,
       status: 'in_review',
+      review_phase: reviewPhase,
     })
     notifyProjectMembers({
       projectId,
@@ -60,7 +65,7 @@ export default function ReviewPanel({ projectId }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Review Rounds ({reviews.length})</span>
+        <span className="text-sm font-medium">{phaseLabel} Rounds ({reviews.length})</span>
         {canReview && (
           <Button size="sm" variant="outline" onClick={handleCreateReview} disabled={createReview.isPending}>
             <Plus className="h-4 w-4 mr-1" />
